@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package stock;
+
+message Action {
+  enum Type {
+    UNSPECIFIED = 0;
+    BUY = 1;
+    SELL = 2;
+    TRANSFER = 3;
+  }
+}
+
+message CreateReq {
+  int32 user_id = 1 [json_name = "user_id"];
+  string symbol = 2 [json_name = "symbol"];
+  double price = 3 [json_name = "price"];
+  int32 quantity = 4 [json_name = "quantity"];
+  Action.Type action = 5 [json_name = "action"]; // add validation rules
+  google.protobuf.Timestamp created_at = 6 [json_name = "created_at"];
+  google.protobuf.Timestamp updated_at = 7 [json_name = "updated_at"];
+}
+
+message CreateResp {
+  string id = 1 [json_name = "id"];
+}
+
+service StockService {
+  rpc Create (CreateReq) returns (CreateResp) {}
+}
