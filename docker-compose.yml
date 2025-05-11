@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  protoc:
+    build:
+      context: ./tools/protoc
+    volumes:
+      - ./src/proto:/proto
+      - ./tools/protoc:/tools/protoc
+    working_dir: /proto
+    command: ["/tools/protoc/gen-protoc.sh"]
+
+networks:
+  default:
+    name: python-proto-net
