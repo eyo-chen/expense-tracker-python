@@ -5,10 +5,10 @@ services:
     build:
       context: ./tools/protoc
     volumes:
-      - ./src/proto:/proto
-      - ./tools/protoc:/tools/protoc
-    working_dir: /proto
-    command: ["/tools/protoc/gen-protoc.sh"]
+      - ./src/proto:/app/src/proto
+      - ./tools/protoc:/app/tools/protoc
+    working_dir: /app
+    command: ["/app/tools/protoc/gen-protoc.sh"]
 
 networks:
   default:
