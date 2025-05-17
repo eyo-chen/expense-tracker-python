@@ -1,6 +1,13 @@
 version: '3.8'
 
 services:
+  mongodb-test:
+    image: mongo:latest
+    container_name: test_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: test_stock_db
   protoc:
     build:
       context: ./tools/protoc
