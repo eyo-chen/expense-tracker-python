@@ -3,6 +3,7 @@ from pymongo.database import Database
 from .base import AbstractStockRepository
 from domain.stock import CreateStock
 
+
 class StockRepository(AbstractStockRepository):
     def __init__(self, mongo_client: MongoClient, database_name: str = "stock_db"):
         self.client = mongo_client
@@ -19,7 +20,7 @@ class StockRepository(AbstractStockRepository):
             "created_at": stock.created_at,
             "updated_at": stock.created_at,
         }
-        
+
         result = self.collection.insert_one(stock_dict)
         return str(result.inserted_id)
 
