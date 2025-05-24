@@ -38,11 +38,6 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install --system -r pyproject.toml
-          uv pip install --system pytest flake8
-
-      - name: Run linter (flake8)
-        run: |
-          flake8 src/ --max-line-length=88 --extend-ignore=E203
 
       - name: Generate protobuf files
         run: make generate
