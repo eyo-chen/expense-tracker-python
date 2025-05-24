@@ -22,19 +22,6 @@ def stock_repository(mongo_client):
 @pytest.fixture(scope="function", autouse=True)
 def clear_collection(stock_repository):
     stock_repository.collection.delete_many({})
-    yield
-
-
-@pytest.fixture
-def sample_stock():
-    return CreateStock(
-        user_id=1,
-        symbol="AAPL",
-        price=150.25,
-        quantity=100,
-        action_type=ActionType.BUY,
-        created_at=datetime.now(datetime.timezone.utc),
-    )
 
 
 class TestStockRepository:
@@ -63,12 +50,8 @@ class TestStockRepository:
         # Assertion
         stock_data = stock_repository.collection.find_one({"_id": ObjectId(stock_id)})
         fields_to_exclude = ["_id", "created_at", "updated_at"]
-        stock_data_filtered = {
-            k: v for k, v in stock_data.items() if k not in fields_to_exclude
-        }
-        expected_result_filtered = {
-            k: v for k, v in expected_result.items() if k not in fields_to_exclude
-        }
+        stock_data_filtered = {k: v for k, v in stock_data.items() if k not in fields_to_exclude}
+        expected_result_filtered = {k: v for k, v in expected_result.items() if k not in fields_to_exclude}
 
         assert stock_data_filtered == expected_result_filtered
 
@@ -123,20 +106,12 @@ class TestStockRepository:
         fields_to_exclude = {"_id", "created_at", "updated_at"}
 
         # Loop through each dictionary and exclude unwanted fields (a list of dictionaries)
-        normalized_expected = [
-            {k: v for k, v in item.items() if k not in fields_to_exclude}
-            for item in expected_data
-        ]
-        normalized_actual = [
-            {k: v for k, v in item.items() if k not in fields_to_exclude}
-            for item in actual_data
-        ]
+        normalized_expected = [{k: v for k, v in item.items() if k not in fields_to_exclude} for item in expected_data]
+        normalized_actual = [{k: v for k, v in item.items() if k not in fields_to_exclude} for item in actual_data]
 
         # Convert each dictionary to a tuple of sorted items and create sets
         expected_set = {tuple(item.items()) for item in normalized_expected}
         actual_set = {tuple(item.items()) for item in normalized_actual}
 
         # Compare the sets
-        assert (
-            expected_set == actual_set
-        ), f"Expected {expected_set}, but got {actual_set}"
+        assert expected_set == actual_set, f"Expected {expected_set}, but got {actual_set}"
