@@ -41,8 +41,11 @@ print_emoji_line "=>" "${YELLOW}"
 docker-compose up -d mongodb-test
 uv run src/tests/tools/wait_for_mongo.py
 PYTHONPATH=./src python -m pytest src/tests/
-if [ $? -eq 0 ]; then
+pytest_exit_code=$?
+if [ $pytest_exit_code -eq 0 ]; then
     echo -e "${GREEN}🎉 Tests passed successfully!"
+    exit 0
 else
     echo -e "${RED}❌ Tests failed!"
+    exit $pytest_exit_code
 fi
