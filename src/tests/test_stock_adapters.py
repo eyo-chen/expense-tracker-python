@@ -1,8 +1,10 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
+
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from domain.stock import CreateStock, ActionType
+
+from domain.stock import CreateStock, ActionType, Stock
 from adapters.stock import StockRepository
 
 
@@ -115,3 +117,133 @@ class TestStockRepository:
 
         # Compare the sets
         assert expected_set == actual_set, f"Expected {expected_set}, but got {actual_set}"
+
+    def test_list_stocks(self, stock_repository):
+        # Create mock stock data
+        created_at = datetime.now(timezone.utc)
+        mock_stock1 = {
+            "user_id": 1,
+            "symbol": "AAPL",
+            "price": 150.25,
+            "quantity": 100,
+            "action_type": ActionType.BUY.value,
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+        mock_stock2 = {
+            "user_id": 1,
+            "symbol": "TSLA",
+            "price": 110.25,
+            "quantity": 50,
+            "action_type": ActionType.SELL.value,
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+        mock_stock3 = {
+            "user_id": 2,  # Different user_id
+            "symbol": "GOOGL",
+            "price": 2500.50,
+            "quantity": 10,
+            "action_type": ActionType.BUY.value,
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+
+        # Insert mock stocks directly into the MongoDB collection
+        result1 = stock_repository.collection.insert_one(mock_stock1)
+        result2 = stock_repository.collection.insert_one(mock_stock2)
+        stock_repository.collection.insert_one(mock_stock3)
+
+        # Get the inserted IDs
+        stock_id1 = str(result1.inserted_id)
+        stock_id2 = str(result2.inserted_id)
+
+        # Expected Stock objects for user_id=1
+        expected_stocks = [
+            Stock(
+                id=stock_id1,
+                user_id=mock_stock1["user_id"],
+                symbol=mock_stock1["symbol"],
+                price=mock_stock1["price"],
+                quantity=mock_stock1["quantity"],
+                action_type=ActionType(mock_stock1["action_type"]),
+                created_at=mock_stock1["created_at"],
+                updated_at=mock_stock1["updated_at"],
+            ),
+            Stock(
+                id=stock_id2,
+                user_id=mock_stock2["user_id"],
+                symbol=mock_stock2["symbol"],
+                price=mock_stock2["price"],
+                quantity=mock_stock2["quantity"],
+                action_type=ActionType(mock_stock2["action_type"]),
+                created_at=mock_stock2["created_at"],
+                updated_at=mock_stock2["updated_at"],
+            ),
+        ]
+
+        # Action
+        result = stock_repository.list(1)
+
+        # Assertions
+        assert len(result) == 2, f"Expected 2 stocks, but got {len(result)}"
+        assert all(isinstance(stock, Stock) for stock in result), "All results should be Stock objects"
+
+        # Convert to sets for comparison (to ignore order)
+        result_set = {
+            (
+                stock.id,
+                stock.user_id,
+                stock.symbol,
+                stock.price,
+                stock.quantity,
+                stock.action_type,
+            )
+            for stock in result
+        }
+        expected_set = {
+            (
+                stock.id,
+                stock.user_id,
+                stock.symbol,
+                stock.price,
+                stock.quantity,
+                stock.action_type,
+            )
+            for stock in expected_stocks
+        }
+
+        assert result_set == expected_set, f"Expected {expected_set}, but got {result_set}"
+
+    def test_list_stocks_no_data(self, stock_repository):
+        # Create mock stock data for user_id=1
+        created_at = datetime.now(timezone.utc)
+        mock_stock1 = {
+            "user_id": 1,
+            "symbol": "AAPL",
+            "price": 150.25,
+            "quantity": 100,
+            "action_type": ActionType.BUY.value,
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+        mock_stock2 = {
+            "user_id": 1,
+            "symbol": "TSLA",
+            "price": 110.25,
+            "quantity": 50,
+            "action_type": ActionType.SELL.value,
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+
+        # Insert mock stocks directly into the MongoDB collection
+        stock_repository.collection.insert_many([mock_stock1, mock_stock2])
+
+        # Query for a user_id with no stock data
+        result = stock_repository.list(999)  # Non-existent user_id
+
+        # Assertions
+        assert len(result) == 0, f"Expected empty list, but got {len(result)} stocks"
+        assert isinstance(result, list), "Result should be a list"
+        assert all(isinstance(stock, Stock) for stock in result), "All results should be Stock objects (if any)"
