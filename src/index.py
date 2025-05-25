@@ -4,7 +4,7 @@ from concurrent import futures
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from handler.stock import StockService
-from adapters.repositories.stock.stock import StockRepository
+from adapters.stock import StockRepository
 from usecase.stock.stock import StockUsecase
 
 

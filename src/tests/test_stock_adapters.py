@@ -3,7 +3,7 @@ from datetime import datetime
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from domain.stock import CreateStock, ActionType
-from adapters.repositories.stock.stock import StockRepository
+from adapters.stock import StockRepository
 
 
 @pytest.fixture(scope="module")
