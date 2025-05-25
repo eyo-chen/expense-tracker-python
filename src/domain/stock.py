@@ -20,3 +20,15 @@ class CreateStock:
     quantity: int
     action_type: ActionType
     created_at: datetime
+
+
+@dataclass
+class Stock:
+    id: str
+    user_id: int
+    symbol: str
+    price: float
+    quantity: int
+    action_type: ActionType
+    created_at: datetime
+    updated_at: datetime

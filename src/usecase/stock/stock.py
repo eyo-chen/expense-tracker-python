@@ -1,5 +1,5 @@
 from domain.stock import CreateStock
-from adapters.repositories.stock.base import AbstractStockRepository
+from adapters.base import AbstractStockRepository
 from .base import AbstractStockUsecase
 
 
