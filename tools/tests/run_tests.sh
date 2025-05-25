@@ -28,7 +28,9 @@ cleanup() {
     echo -e "<= Cleaning up resources..."
     print_emoji_line "<=" "${BLUE}"
     docker-compose down -v mongodb-test
-    rm -rf __pycache__ tests/__pycache__
+    rm -rf __pycache__ tests/__pycache__ coverage.out .coverage
+    # Only remove coverage.xml if it exists
+    [ -f coverage.xml ] && rm -f coverage.xml
 }
 
 # Set trap to call cleanup on exit (success or failure)
@@ -40,8 +42,22 @@ echo -e "=> Starting test environment..."
 print_emoji_line "=>" "${YELLOW}"
 docker-compose up -d mongodb-test
 uv run tools/tests/wait_for_mongo.py
-PYTHONPATH=./src python -m pytest src/tests/
+
+# Conditionally set coverage report options based on CI environment
+if [ "$CI" = "true" ]; then
+    cov_report="--cov-report=term-missing --cov-report=xml"
+else
+    cov_report="--cov-report=term-missing"
+fi
+
+# Run pytest with coverage
+PYTHONPATH=./src uv run pytest src/tests/ --cov=src $cov_report -v
 pytest_exit_code=$?
+# Extract total coverage percentage
+total_coverage=$(uv run coverage report | grep TOTAL | awk '{print $NF}' | sed 's/%//')
+echo "Total Coverage: $total_coverage%"
+echo "total_coverage=$total_coverage" >> $GITHUB_ENV
+
 if [ $pytest_exit_code -eq 0 ]; then
     echo -e "${GREEN}🎉 Tests passed successfully!"
     exit 0
