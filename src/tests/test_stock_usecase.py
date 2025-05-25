@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
 from unittest.mock import Mock
-from usecase.stock.stock import StockUsecase
+from usecase.stock import StockUsecase
 from domain.stock import CreateStock, ActionType
 
 

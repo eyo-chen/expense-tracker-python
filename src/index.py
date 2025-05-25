@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from handler.stock import StockService
 from adapters.stock import StockRepository
-from usecase.stock.stock import StockUsecase
+from usecase.stock import StockUsecase
 
 
 load_dotenv()

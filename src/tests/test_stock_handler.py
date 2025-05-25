@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 from domain.stock import CreateStock, ActionType
 from handler.stock import StockService
-from usecase.stock.base import AbstractStockUsecase
+from usecase.base import AbstractStockUsecase
 
 
 class TestStockServiceCreate:

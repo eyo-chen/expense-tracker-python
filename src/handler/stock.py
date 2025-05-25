@@ -5,7 +5,7 @@ import grpc
 import proto.stock_pb2 as stock_pb2
 import proto.stock_pb2_grpc as stock_pb2_grpc
 
-from usecase.stock.base import AbstractStockUsecase
+from usecase.base import AbstractStockUsecase
 from domain.stock import CreateStock, ActionType, ACTION_MAP
 
 
