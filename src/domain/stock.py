@@ -9,6 +9,9 @@ class ActionType(Enum):
     TRANSFER = "TRANSFER"
 
 
+ACTION_MAP = {1: ActionType.BUY, 2: ActionType.SELL, 3: ActionType.TRANSFER}
+
+
 @dataclass
 class CreateStock:
     user_id: int
