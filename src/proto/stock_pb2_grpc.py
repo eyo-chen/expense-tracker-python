@@ -39,12 +39,23 @@ class StockServiceStub(object):
                 request_serializer=proto_dot_stock__pb2.CreateReq.SerializeToString,
                 response_deserializer=proto_dot_stock__pb2.CreateResp.FromString,
                 _registered_method=True)
+        self.List = channel.unary_unary(
+                '/stock.StockService/List',
+                request_serializer=proto_dot_stock__pb2.ListReq.SerializeToString,
+                response_deserializer=proto_dot_stock__pb2.ListResp.FromString,
+                _registered_method=True)
 
 
 class StockServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Create(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def List(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -57,6 +68,11 @@ def add_StockServiceServicer_to_server(servicer, server):
                     servicer.Create,
                     request_deserializer=proto_dot_stock__pb2.CreateReq.FromString,
                     response_serializer=proto_dot_stock__pb2.CreateResp.SerializeToString,
+            ),
+            'List': grpc.unary_unary_rpc_method_handler(
+                    servicer.List,
+                    request_deserializer=proto_dot_stock__pb2.ListReq.FromString,
+                    response_serializer=proto_dot_stock__pb2.ListResp.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,6 +102,33 @@ class StockService(object):
             '/stock.StockService/Create',
             proto_dot_stock__pb2.CreateReq.SerializeToString,
             proto_dot_stock__pb2.CreateResp.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def List(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/stock.StockService/List',
+            proto_dot_stock__pb2.ListReq.SerializeToString,
+            proto_dot_stock__pb2.ListResp.FromString,
             options,
             channel_credentials,
             insecure,

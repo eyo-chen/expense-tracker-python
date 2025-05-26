@@ -13,6 +13,17 @@ message Action {
   }
 }
 
+message Stock {
+  string id = 1 [json_name = "id"];
+  int32 user_id = 2 [json_name = "user_id"];
+  string symbol = 3 [json_name = "symbol"];
+  double price = 4 [json_name = "price"];
+  int32 quantity = 5 [json_name = "quantity"];
+  string action = 6 [json_name = "action"];
+  google.protobuf.Timestamp created_at = 7 [json_name = "created_at"];
+  google.protobuf.Timestamp updated_at = 8 [json_name = "updated_at"];
+}
+
 message CreateReq {
   int32 user_id = 1 [json_name = "user_id"];
   string symbol = 2 [json_name = "symbol"];
@@ -27,6 +38,16 @@ message CreateResp {
   string id = 1 [json_name = "id"];
 }
 
+message ListReq {
+  int32 user_id = 1 [json_name = "user_id"];
+}
+
+message ListResp {
+  repeated Stock stock_list = 1 [json_name = "stock_list"];
+}
+
 service StockService {
   rpc Create (CreateReq) returns (CreateResp) {}
+
+  rpc List (ListReq) returns (ListResp) {}
 }

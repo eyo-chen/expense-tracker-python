@@ -2,10 +2,10 @@ import pytest
 import grpc
 import proto.stock_pb2 as stock_pb2
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import Mock
 
-from domain.stock import CreateStock, ActionType
+from domain.stock import CreateStock, ActionType, Stock
 from handler.stock import StockService
 from usecase.base import AbstractStockUsecase
 
@@ -165,3 +165,87 @@ class TestStockServiceCreate:
         mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
         mock_context.set_details.assert_called_once_with("Internal server error")
         mock_stock_usecase.create.assert_called_once()
+
+
+class TestStockServiceList:
+    # Fixture to create a mock stock_usecase
+    @pytest.fixture
+    def mock_stock_usecase(self):
+        usecase = Mock(spec=AbstractStockUsecase)
+        usecase.list.return_value = [
+            Stock(
+                id="stock_123",
+                user_id=1,
+                symbol="AAPL",
+                price=100.0,
+                quantity=10,
+                action_type=ActionType.BUY,
+                created_at=datetime(2023, 1, 1, tzinfo=timezone.utc),
+                updated_at=datetime(2023, 1, 1, tzinfo=timezone.utc),  # Include if required
+            ),
+            Stock(
+                id="stock_124",
+                user_id=1,
+                symbol="GOOGL",
+                price=1500.0,
+                quantity=5,
+                action_type=ActionType.SELL,
+                created_at=datetime(2023, 1, 2, tzinfo=timezone.utc),
+                updated_at=datetime(2023, 1, 2, tzinfo=timezone.utc),  # Include if required
+            ),
+        ]
+        return usecase
+
+    # Fixture to create a mock gRPC context
+    @pytest.fixture
+    def mock_context(self):
+        context = Mock()
+        context.set_code = Mock()
+        context.set_details = Mock()
+        return context
+
+    # Fixture to create a valid gRPC request
+    @pytest.fixture
+    def valid_request(self):
+        request = Mock()
+        request.user_id = 1
+        return request
+
+    def test_success(self, mock_stock_usecase, mock_context, valid_request):
+        # Arrange
+        service = StockService(mock_stock_usecase)
+
+        # Action
+        response = service.List(valid_request, mock_context)
+
+        # Assertion
+        assert isinstance(response, stock_pb2.ListResp)
+        assert len(response.stock_list) == 2
+        assert response.stock_list[0].id == "stock_123"
+        assert response.stock_list[0].user_id == 1
+        assert response.stock_list[0].symbol == "AAPL"
+        assert response.stock_list[0].price == 100.0
+        assert response.stock_list[0].quantity == 10
+        assert response.stock_list[0].action == ActionType.BUY.value
+        assert response.stock_list[1].id == "stock_124"
+        assert response.stock_list[1].user_id == 1
+        assert response.stock_list[1].symbol == "GOOGL"
+        assert response.stock_list[1].price == 1500.0
+        assert response.stock_list[1].quantity == 5
+        assert response.stock_list[1].action == ActionType.SELL.value
+        mock_stock_usecase.list.assert_called_once_with(1)
+        mock_context.set_code.assert_not_called()
+        mock_context.set_details.assert_not_called()
+
+    def test_internal_error(self, mock_stock_usecase, mock_context, valid_request):
+        # Arrange
+        service = StockService(mock_stock_usecase)
+        mock_stock_usecase.list.side_effect = Exception("Database error")  # Simulate internal error
+
+        # Act/Assertion
+        with pytest.raises(grpc.RpcError) as exc_info:
+            service.List(valid_request, mock_context)
+        assert str(exc_info.value) == "Internal server error"
+        mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
+        mock_context.set_details.assert_called_once_with("Internal server error")
+        mock_stock_usecase.list.assert_called_once_with(1)
