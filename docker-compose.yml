@@ -5,7 +5,7 @@ services:
     image: mongo:latest
     container_name: test_mongodb
     ports:
-      - "27017:27017"
+      - "27015:27017"
     environment:
       MONGO_INITDB_DATABASE: test_stock_db
   protoc:
@@ -15,7 +15,7 @@ services:
       - ./src/proto:/app/src/proto
       - ./tools/protoc:/app/tools/protoc
     working_dir: /app
-    command: ["/app/tools/protoc/gen-protoc.sh"]
+    command: [ "/app/tools/protoc/gen-protoc.sh" ]
 
 networks:
   default:
