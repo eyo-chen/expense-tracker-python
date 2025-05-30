@@ -19,3 +19,7 @@ class AbstractPortfolioRepository(ABC):
     @abstractmethod
     def update(self, portfolio: Portfolio) -> None:
         """Update portfolio in the repository"""
+
+    @abstractmethod
+    def get(self, user_id: int) -> Portfolio:
+        """Get Portfolio"""
