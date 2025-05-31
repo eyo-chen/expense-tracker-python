@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Dict
 from datetime import datetime, timezone
+import yfinance as yf
 from domain.stock import CreateStock, Stock, ActionType
 from domain.portfolio import Portfolio, Holding
 from adapters.base import AbstractStockRepository, AbstractPortfolioRepository
@@ -63,3 +64,43 @@ class StockUsecase(AbstractStockUsecase):
 
     def list(self, user_id: int) -> List[Stock]:
         return self.stock_repo.list(user_id)
+
+    def calculate_total_roi(self, user_id: int) -> float:
+        portfolio = self.portfolio_repo.get(user_id=user_id)
+        if portfolio is None or portfolio.total_money_in == 0.0:
+            return 0.0
+
+        valid_holdings = [(holding.symbol, holding.shares) for holding in portfolio.holdings if holding.shares > 0]
+        if not valid_holdings:
+            # If no valid holdings, ROI depends only on cash balance
+            return round(((portfolio.cash_balance - portfolio.total_money_in) / portfolio.total_money_in) * 100, 2)
+
+        # Fetch prices in batch
+        stock_symbols = [symbol for symbol, _ in valid_holdings]
+        stock_price_by_symbol = self._get_stock_price(symbols=stock_symbols)
+
+        # Calculate total stock value
+        total_stock_price = sum(shares * stock_price_by_symbol.get(symbol, 0.0) for symbol, shares in valid_holdings)
+
+        # Compute ROI
+        total_value = total_stock_price + portfolio.cash_balance
+        roi = ((total_value - portfolio.total_money_in) / portfolio.total_money_in) * 100
+        return round(roi, 2)
+
+    def _get_stock_price(self, symbols: List[str]) -> Dict[str, float]:
+        if not symbols:
+            return {}
+
+        try:
+            tickers = yf.Tickers(symbols)
+            return {
+                symbol: (
+                    ticker.info.get("currentPrice", 0.0)
+                    if (ticker := tickers.tickers.get(symbol.upper())) is not None
+                    else 0.0
+                )
+                for symbol in symbols
+            }
+        except Exception as e:
+            print(f"Error fetching prices for symbols {symbols}: {e}")
+            return {symbol.upper(): 0.0 for symbol in symbols}
