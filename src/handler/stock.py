@@ -43,6 +43,22 @@ class StockService(stock_pb2_grpc.StockService):
             context.set_details("Internal server error")
             raise grpc.RpcError("Internal server error")
 
+    def List(self, request, context):
+        try:
+            user_id = request.user_id
+            stock_list = self.stock_usecase.list(user_id)
+
+            return stock_pb2.ListResp(stock_list=self._convert_to_proto_stock_list(stock_list))
+        except Exception as e:
+            logging.error(
+                "Failed to list stocks for user_id=%s: %s",
+                request.user_id,
+                str(e),
+            )
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal server error")
+            raise grpc.RpcError("Internal server error")
+
     def _map_action_type(self, action: int) -> ActionType:
         if action not in ACTION_MAP:
             raise ValueError(f"Invalid action type: {action}. Must be 1 (BUY), 2 (SELL), or 3 (TRANSFER).")
@@ -57,3 +73,18 @@ class StockService(stock_pb2_grpc.StockService):
             raise ValueError("price must be greater than 0")
         if request.quantity <= 0:
             raise ValueError("quantity must be greater than 0")
+
+    def _convert_to_proto_stock_list(self, stock_list):
+        return [
+            stock_pb2.Stock(
+                id=stock.id,
+                user_id=stock.user_id,
+                symbol=stock.symbol,
+                price=stock.price,
+                quantity=stock.quantity,
+                action=stock.action_type.value,
+                created_at=stock.created_at,
+                updated_at=stock.updated_at,
+            )
+            for stock in stock_list
+        ]
