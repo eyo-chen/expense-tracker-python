@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11proto/stock.proto\x12\x05stock\x1a\x1fgoogle/protobuf/timestamp.proto\"B\n\x06\x41\x63tion\"8\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x07\n\x03\x42UY\x10\x01\x12\x08\n\x04SELL\x10\x02\x12\x0c\n\x08TRANSFER\x10\x03\"\x8b\x02\n\x05Stock\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07user_id\x18\x02 \x01(\x05R\x07user_id\x12\x16\n\x06symbol\x18\x03 \x01(\tR\x06symbol\x12\x14\n\x05price\x18\x04 \x01(\x01R\x05price\x12\x1a\n\x08quantity\x18\x05 \x01(\x05R\x08quantity\x12\x16\n\x06\x61\x63tion\x18\x06 \x01(\tR\x06\x61\x63tion\x12:\n\ncreated_at\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreated_at\x12:\n\nupdated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdated_at\"\x93\x02\n\tCreateReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12\x16\n\x06symbol\x18\x02 \x01(\tR\x06symbol\x12\x14\n\x05price\x18\x03 \x01(\x01R\x05price\x12\x1a\n\x08quantity\x18\x04 \x01(\x05R\x08quantity\x12*\n\x06\x61\x63tion\x18\x05 \x01(\x0e\x32\x12.stock.Action.TypeR\x06\x61\x63tion\x12:\n\ncreated_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreated_at\x12:\n\nupdated_at\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdated_at\"\x1c\n\nCreateResp\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"#\n\x07ListReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\"8\n\x08ListResp\x12,\n\nstock_list\x18\x01 \x03(\x0b\x32\x0c.stock.StockR\nstock_list2j\n\x0cStockService\x12/\n\x06\x43reate\x12\x10.stock.CreateReq\x1a\x11.stock.CreateResp\"\x00\x12)\n\x04List\x12\x0e.stock.ListReq\x1a\x0f.stock.ListResp\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11proto/stock.proto\x12\x05stock\x1a\x1fgoogle/protobuf/timestamp.proto\"B\n\x06\x41\x63tion\"8\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x07\n\x03\x42UY\x10\x01\x12\x08\n\x04SELL\x10\x02\x12\x0c\n\x08TRANSFER\x10\x03\"9\n\tStockType\",\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\n\n\x06STOCKS\x10\x01\x12\x07\n\x03\x45TF\x10\x02\"\xab\x02\n\x05Stock\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07user_id\x18\x02 \x01(\x05R\x07user_id\x12\x16\n\x06symbol\x18\x03 \x01(\tR\x06symbol\x12\x14\n\x05price\x18\x04 \x01(\x01R\x05price\x12\x1a\n\x08quantity\x18\x05 \x01(\x05R\x08quantity\x12\x16\n\x06\x61\x63tion\x18\x06 \x01(\tR\x06\x61\x63tion\x12\x1e\n\nstock_type\x18\x07 \x01(\tR\nstock_type\x12:\n\ncreated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreated_at\x12:\n\nupdated_at\x18\t \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdated_at\"\xca\x02\n\tCreateReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12\x16\n\x06symbol\x18\x02 \x01(\tR\x06symbol\x12\x14\n\x05price\x18\x03 \x01(\x01R\x05price\x12\x1a\n\x08quantity\x18\x04 \x01(\x05R\x08quantity\x12*\n\x06\x61\x63tion\x18\x05 \x01(\x0e\x32\x12.stock.Action.TypeR\x06\x61\x63tion\x12\x35\n\nstock_type\x18\x06 \x01(\x0e\x32\x15.stock.StockType.TypeR\nstock_type\x12:\n\ncreated_at\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreated_at\x12:\n\nupdated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdated_at\"\x1c\n\nCreateResp\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"#\n\x07ListReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\"8\n\x08ListResp\x12,\n\nstock_list\x18\x01 \x03(\x0b\x32\x0c.stock.StockR\nstock_list2j\n\x0cStockService\x12/\n\x06\x43reate\x12\x10.stock.CreateReq\x1a\x11.stock.CreateResp\"\x00\x12)\n\x04List\x12\x0e.stock.ListReq\x1a\x0f.stock.ListResp\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,16 +36,20 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_ACTION']._serialized_end=127
   _globals['_ACTION_TYPE']._serialized_start=71
   _globals['_ACTION_TYPE']._serialized_end=127
-  _globals['_STOCK']._serialized_start=130
-  _globals['_STOCK']._serialized_end=397
-  _globals['_CREATEREQ']._serialized_start=400
-  _globals['_CREATEREQ']._serialized_end=675
-  _globals['_CREATERESP']._serialized_start=677
-  _globals['_CREATERESP']._serialized_end=705
-  _globals['_LISTREQ']._serialized_start=707
-  _globals['_LISTREQ']._serialized_end=742
-  _globals['_LISTRESP']._serialized_start=744
-  _globals['_LISTRESP']._serialized_end=800
-  _globals['_STOCKSERVICE']._serialized_start=802
-  _globals['_STOCKSERVICE']._serialized_end=908
+  _globals['_STOCKTYPE']._serialized_start=129
+  _globals['_STOCKTYPE']._serialized_end=186
+  _globals['_STOCKTYPE_TYPE']._serialized_start=142
+  _globals['_STOCKTYPE_TYPE']._serialized_end=186
+  _globals['_STOCK']._serialized_start=189
+  _globals['_STOCK']._serialized_end=488
+  _globals['_CREATEREQ']._serialized_start=491
+  _globals['_CREATEREQ']._serialized_end=821
+  _globals['_CREATERESP']._serialized_start=823
+  _globals['_CREATERESP']._serialized_end=851
+  _globals['_LISTREQ']._serialized_start=853
+  _globals['_LISTREQ']._serialized_end=888
+  _globals['_LISTRESP']._serialized_start=890
+  _globals['_LISTRESP']._serialized_end=946
+  _globals['_STOCKSERVICE']._serialized_start=948
+  _globals['_STOCKSERVICE']._serialized_end=1054
 # @@protoc_insertion_point(module_scope)

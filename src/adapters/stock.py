@@ -1,10 +1,9 @@
 from typing import List
-
 from pymongo import MongoClient
 from pymongo.database import Database
-
 from .base import AbstractStockRepository
-from domain.stock import CreateStock, Stock, ActionType
+from domain.stock import CreateStock, Stock
+from domain.enum import ActionType, StockType
 
 
 class StockRepository(AbstractStockRepository):
@@ -14,17 +13,7 @@ class StockRepository(AbstractStockRepository):
         self.collection = self.db["stocks"]
 
     def create(self, stock: CreateStock) -> str:
-        stock_dict = {
-            "user_id": stock.user_id,
-            "symbol": stock.symbol,
-            "price": stock.price,
-            "quantity": stock.quantity,
-            "action_type": stock.action_type.value,
-            "created_at": stock.created_at,
-            "updated_at": stock.created_at,
-        }
-
-        result = self.collection.insert_one(stock_dict)
+        result = self.collection.insert_one(stock.as_dict())
         return str(result.inserted_id)
 
     def list(self, user_id: int) -> List[Stock]:
@@ -38,6 +27,7 @@ class StockRepository(AbstractStockRepository):
                 price=doc["price"],
                 quantity=doc["quantity"],
                 action_type=ActionType(doc["action_type"]),
+                stock_type=StockType(doc["stock_type"]),
                 created_at=doc["created_at"],
                 updated_at=doc["updated_at"],
             )

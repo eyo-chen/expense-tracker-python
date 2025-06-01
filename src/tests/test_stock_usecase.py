@@ -2,8 +2,9 @@ import pytest
 from datetime import datetime, timezone
 from unittest.mock import Mock, ANY, patch
 from usecase.stock import StockUsecase
-from domain.stock import CreateStock, ActionType, Stock
+from domain.stock import CreateStock, Stock
 from domain.portfolio import Portfolio, Holding
+from domain.enum import ActionType, StockType
 
 
 @pytest.fixture
@@ -21,10 +22,11 @@ class TestStockUsecase:
         user_id, stock_id = 1, "123"
         stock = CreateStock(
             user_id=user_id,
-            symbol="",
+            symbol="TRANSFER",
             price=3000.0,
             quantity=1,
             action_type=ActionType.TRANSFER,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         portfolio_repo.get.return_value = None
@@ -53,10 +55,11 @@ class TestStockUsecase:
         user_id, stock_id = 1, "123"
         stock = CreateStock(
             user_id=user_id,
-            symbol="",
+            symbol="TRANSFER",
             price=3000.0,
             quantity=1,
             action_type=ActionType.TRANSFER,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -96,7 +99,8 @@ class TestStockUsecase:
             symbol="TSLA",
             price=2000.0,
             quantity=2,
-            action_type=ActionType.BUY.value,
+            action_type=ActionType.BUY,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -113,7 +117,7 @@ class TestStockUsecase:
             user_id=existing_portfolio.user_id,
             cash_balance=1000.0,
             total_money_in=5000.0,
-            holdings=[Holding(symbol="TSLA", shares=2, total_cost=4000.0)],
+            holdings=[Holding(symbol="TSLA", shares=2, stock_type=StockType.STOCKS, total_cost=4000.0)],
             created_at=ANY,
             updated_at=ANY,
         )
@@ -136,14 +140,15 @@ class TestStockUsecase:
             symbol="AAPL",
             price=150.0,
             quantity=3,
-            action_type=ActionType.BUY.value,
+            action_type=ActionType.BUY,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
             user_id=user_id,
             cash_balance=1000.0,
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=5, total_cost=750.0)],
+            holdings=[Holding(symbol="AAPL", shares=5, stock_type=StockType.STOCKS, total_cost=750.0)],
             created_at=ANY,
             updated_at=ANY,
         )
@@ -153,7 +158,9 @@ class TestStockUsecase:
             user_id=user_id,
             cash_balance=550.0,  # 1000 - (150 * 3)
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=8, total_cost=1200.0)],  # 750 + (150 * 3)
+            holdings=[
+                Holding(symbol="AAPL", shares=8, stock_type=StockType.STOCKS, total_cost=1200.0)
+            ],  # 750 + (150 * 3)
             created_at=ANY,
             updated_at=ANY,
         )
@@ -176,14 +183,15 @@ class TestStockUsecase:
             symbol="AAPL",
             price=200.0,
             quantity=2,
-            action_type=ActionType.SELL.value,
+            action_type=ActionType.SELL,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
             user_id=user_id,
             cash_balance=1000.0,
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=5, total_cost=750.0)],
+            holdings=[Holding(symbol="AAPL", shares=5, stock_type=StockType.STOCKS, total_cost=750.0)],
             created_at=ANY,
             updated_at=ANY,
         )
@@ -193,7 +201,9 @@ class TestStockUsecase:
             user_id=user_id,
             cash_balance=1400.0,  # 1000 + (200 * 2)
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=3, total_cost=450.0)],  # 750 - (150 * 2)
+            holdings=[
+                Holding(symbol="AAPL", shares=3, stock_type=StockType.STOCKS, total_cost=450.0)
+            ],  # 750 - (150 * 2)
             created_at=ANY,
             updated_at=ANY,
         )
@@ -216,14 +226,15 @@ class TestStockUsecase:
             symbol="AAPL",
             price=300.0,
             quantity=5,
-            action_type=ActionType.SELL.value,
+            action_type=ActionType.SELL,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
             user_id=user_id,
             cash_balance=1000.0,
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=5, total_cost=750.0)],
+            holdings=[Holding(symbol="AAPL", shares=5, stock_type=StockType.STOCKS, total_cost=750.0)],
             created_at=ANY,
             updated_at=ANY,
         )
@@ -256,7 +267,8 @@ class TestStockUsecase:
             symbol="AAPL",
             price=150.0,
             quantity=5,
-            action_type=ActionType.SELL.value,
+            action_type=ActionType.SELL,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -286,7 +298,8 @@ class TestStockUsecase:
             symbol="AAPL",
             price=150.0,
             quantity=10,
-            action_type=ActionType.BUY.value,
+            action_type=ActionType.BUY,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         portfolio_repo.get.side_effect = Exception("Portfolio repository error")
@@ -308,7 +321,8 @@ class TestStockUsecase:
             symbol="AAPL",
             price=150.0,
             quantity=10,
-            action_type=ActionType.BUY.value,
+            action_type=ActionType.BUY,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -339,7 +353,8 @@ class TestStockUsecase:
             symbol="AAPL",
             price=150.0,
             quantity=10,
-            action_type=ActionType.BUY.value,
+            action_type=ActionType.BUY,
+            stock_type=StockType.STOCKS,
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -364,7 +379,6 @@ class TestStockUsecase:
         # Arrange
         usecase, mock_repo, _ = stock_usecase
         user_id = 1
-        created_at = datetime.now(timezone.utc)
         mock_stocks = [
             Stock(
                 id="stock_123",
@@ -373,8 +387,9 @@ class TestStockUsecase:
                 price=150.25,
                 quantity=100,
                 action_type=ActionType.BUY,
-                created_at=created_at,
-                updated_at=created_at,
+                stock_type=StockType.STOCKS,
+                created_at=ANY,
+                updated_at=ANY,
             ),
             Stock(
                 id="stock_124",
@@ -383,8 +398,9 @@ class TestStockUsecase:
                 price=2800.50,
                 quantity=10,
                 action_type=ActionType.BUY,
-                created_at=created_at,
-                updated_at=created_at,
+                stock_type=StockType.STOCKS,
+                created_at=ANY,
+                updated_at=ANY,
             ),
         ]
         mock_repo.list.return_value = mock_stocks
@@ -476,9 +492,11 @@ class TestStockUsecase:
             cash_balance=1000.0,
             total_money_in=5000.0,
             holdings=[
-                Holding(symbol="AAPL", shares=10, total_cost=1500.0),
-                Holding(symbol="GOOGL", shares=5, total_cost=2000.0),
-                Holding(symbol="TSLA", shares=0, total_cost=0.0),  # Zero shares, should be ignored
+                Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0),
+                Holding(symbol="GOOGL", shares=5, stock_type=StockType.STOCKS, total_cost=2000.0),
+                Holding(
+                    symbol="TSLA", shares=0, stock_type=StockType.STOCKS, total_cost=0.0
+                ),  # Zero shares, should be ignored
             ],
             created_at=ANY,
             updated_at=ANY,
@@ -494,7 +512,9 @@ class TestStockUsecase:
 
         # Assert
         portfolio_repo.get.assert_called_once_with(user_id=user_id)
-        mock_get_stock_price.assert_called_once_with(symbols=["AAPL", "GOOGL"])
+        mock_get_stock_price.assert_called_once_with(
+            stock_info=[("AAPL", StockType.STOCKS), ("GOOGL", StockType.STOCKS)]
+        )
         # Total value = 2000 (AAPL) + 15000 (GOOGL) + 1000 (cash) = 18000
         # ROI = ((18000 - 5000) / 5000) * 100 = 260.0
         assert result == 260.0
@@ -509,8 +529,8 @@ class TestStockUsecase:
             cash_balance=1000.0,
             total_money_in=5000.0,
             holdings=[
-                Holding(symbol="AAPL", shares=10, total_cost=1500.0),
-                Holding(symbol="INVALID", shares=5, total_cost=2000.0),
+                Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0),
+                Holding(symbol="INVALID", shares=5, stock_type=StockType.STOCKS, total_cost=2000.0),
             ],
             created_at=ANY,
             updated_at=ANY,
@@ -526,7 +546,9 @@ class TestStockUsecase:
 
         # Assert
         portfolio_repo.get.assert_called_once_with(user_id=user_id)
-        mock_get_stock_price.assert_called_once_with(symbols=["AAPL", "INVALID"])
+        mock_get_stock_price.assert_called_once_with(
+            stock_info=[("AAPL", StockType.STOCKS), ("INVALID", StockType.STOCKS)]
+        )
         # Total value = 2000 (AAPL) + 0 (INVALID) + 1000 (cash) = 3000
         # ROI = ((3000 - 5000) / 5000) * 100 = -40.0
         assert result == -40.0
@@ -543,10 +565,10 @@ class TestStockUsecase:
         portfolio_repo.get.assert_called_once_with(user_id=user_id)
 
     @patch("usecase.stock.yf.Tickers")
-    def test_get_stock_price_success(self, mock_yf_tickers, stock_usecase):
+    def test_get_stock_price_success_stocks(self, mock_yf_tickers, stock_usecase):
         # Arrange
         usecase, _, _ = stock_usecase
-        symbols = ["AAPL", "GOOGL"]
+        stock_info = [("AAPL", StockType.STOCKS), ("GOOGL", StockType.STOCKS)]
         mock_ticker_aapl = Mock()
         mock_ticker_aapl.info = {"currentPrice": 150.0}
         mock_ticker_googl = Mock()
@@ -557,20 +579,62 @@ class TestStockUsecase:
         }
 
         # Act
-        result = usecase._get_stock_price(symbols)
+        result = usecase._get_stock_price(stock_info=stock_info)
 
         # Assert
-        mock_yf_tickers.assert_called_once_with(symbols)
+        mock_yf_tickers.assert_called_once_with(["AAPL", "GOOGL"])
         assert result == {"AAPL": 150.0, "GOOGL": 2800.0}
 
     @patch("usecase.stock.yf.Tickers")
-    def test_get_stock_price_empty_symbols(self, mock_yf_tickers, stock_usecase):
+    def test_get_stock_price_success_etf(self, mock_yf_tickers, stock_usecase):
         # Arrange
         usecase, _, _ = stock_usecase
-        symbols = []
+        stock_info = [("SPY", StockType.ETF), ("VTI", StockType.ETF)]
+        mock_ticker_spy = Mock()
+        mock_ticker_spy.info = {"navPrice": 400.0}
+        mock_ticker_vti = Mock()
+        mock_ticker_vti.info = {"navPrice": 200.0}
+        mock_yf_tickers.return_value.tickers = {
+            "SPY": mock_ticker_spy,
+            "VTI": mock_ticker_vti,
+        }
 
         # Act
-        result = usecase._get_stock_price(symbols)
+        result = usecase._get_stock_price(stock_info=stock_info)
+
+        # Assert
+        mock_yf_tickers.assert_called_once_with(["SPY", "VTI"])
+        assert result == {"SPY": 400.0, "VTI": 200.0}
+
+    @patch("usecase.stock.yf.Tickers")
+    def test_get_stock_price_mixed_types(self, mock_yf_tickers, stock_usecase):
+        # Arrange
+        usecase, _, _ = stock_usecase
+        stock_info = [("AAPL", StockType.STOCKS), ("SPY", StockType.ETF)]
+        mock_ticker_aapl = Mock()
+        mock_ticker_aapl.info = {"currentPrice": 150.0}
+        mock_ticker_spy = Mock()
+        mock_ticker_spy.info = {"navPrice": 400.0}
+        mock_yf_tickers.return_value.tickers = {
+            "AAPL": mock_ticker_aapl,
+            "SPY": mock_ticker_spy,
+        }
+
+        # Act
+        result = usecase._get_stock_price(stock_info=stock_info)
+
+        # Assert
+        mock_yf_tickers.assert_called_once_with(["AAPL", "SPY"])
+        assert result == {"AAPL": 150.0, "SPY": 400.0}
+
+    @patch("usecase.stock.yf.Tickers")
+    def test_get_stock_price_empty_stock_info(self, mock_yf_tickers, stock_usecase):
+        # Arrange
+        usecase, _, _ = stock_usecase
+        stock_info = []
+
+        # Act
+        result = usecase._get_stock_price(stock_info=stock_info)
 
         # Assert
         mock_yf_tickers.assert_not_called()
@@ -580,12 +644,49 @@ class TestStockUsecase:
     def test_get_stock_price_handles_api_error(self, mock_yf_tickers, stock_usecase):
         # Arrange
         usecase, _, _ = stock_usecase
-        symbols = ["AAPL", "GOOGL"]
+        stock_info = [("AAPL", StockType.STOCKS), ("GOOGL", StockType.STOCKS)]
         mock_yf_tickers.side_effect = Exception("API error")
 
         # Act
-        result = usecase._get_stock_price(symbols)
+        result = usecase._get_stock_price(stock_info=stock_info)
 
         # Assert
-        mock_yf_tickers.assert_called_once_with(symbols)
+        mock_yf_tickers.assert_called_once_with(["AAPL", "GOOGL"])
         assert result == {"AAPL": 0.0, "GOOGL": 0.0}
+
+    @patch("usecase.stock.yf.Tickers")
+    def test_get_stock_price_missing_ticker(self, mock_yf_tickers, stock_usecase):
+        # Arrange
+        usecase, _, _ = stock_usecase
+        stock_info = [("AAPL", StockType.STOCKS), ("INVALID", StockType.STOCKS)]
+        mock_ticker_aapl = Mock()
+        mock_ticker_aapl.info = {"currentPrice": 150.0}
+        mock_yf_tickers.return_value.tickers = {"AAPL": mock_ticker_aapl}
+
+        # Act
+        result = usecase._get_stock_price(stock_info=stock_info)
+
+        # Assert
+        mock_yf_tickers.assert_called_once_with(["AAPL", "INVALID"])
+        assert result == {"AAPL": 150.0, "INVALID": 0.0}
+
+    @patch("usecase.stock.yf.Tickers")
+    def test_get_stock_price_missing_price_field(self, mock_yf_tickers, stock_usecase):
+        # Arrange
+        usecase, _, _ = stock_usecase
+        stock_info = [("AAPL", StockType.STOCKS), ("SPY", StockType.ETF)]
+        mock_ticker_aapl = Mock()
+        mock_ticker_aapl.info = {}  # No currentPrice
+        mock_ticker_spy = Mock()
+        mock_ticker_spy.info = {}  # No navPrice
+        mock_yf_tickers.return_value.tickers = {
+            "AAPL": mock_ticker_aapl,
+            "SPY": mock_ticker_spy,
+        }
+
+        # Act
+        result = usecase._get_stock_price(stock_info=stock_info)
+
+        # Assert
+        mock_yf_tickers.assert_called_once_with(["AAPL", "SPY"])
+        assert result == {"AAPL": 0.0, "SPY": 0.0}
