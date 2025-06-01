@@ -50,8 +50,18 @@ else
     cov_report="--cov-report=term-missing"
 fi
 
+# Check if a test file path is provided as an argument
+TEST_FILE=$1
+if [ -n "$TEST_FILE" ]; then
+    echo -e "Running tests for: $TEST_FILE"
+    TEST_PATH="$TEST_FILE"
+else
+    echo -e "Running all tests under src/tests"
+    TEST_PATH="src/tests/"
+fi
+
 # Run pytest with coverage
-PYTHONPATH=./src uv run pytest src/tests/ --cov=src $cov_report -v
+PYTHONPATH=./src uv run pytest "$TEST_PATH" --cov=src $cov_report -v
 pytest_exit_code=$?
 # Extract total coverage percentage
 total_coverage=$(uv run coverage report | grep TOTAL | awk '{print $NF}' | sed 's/%//')
