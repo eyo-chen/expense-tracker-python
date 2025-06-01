@@ -10,7 +10,7 @@ from adapters.stock import StockRepository
 
 @pytest.fixture(scope="module")
 def mongo_client():
-    client = MongoClient("mongodb://localhost:27017")
+    client = MongoClient("mongodb://localhost:27015")
     yield client
     client.drop_database("test_stock_db")
     client.close()
