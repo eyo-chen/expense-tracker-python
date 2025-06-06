@@ -1,10 +1,11 @@
+from typing import List as ListType
 import logging
 from datetime import datetime, timezone
 import grpc
 import proto.stock_pb2 as stock_pb2
 import proto.stock_pb2_grpc as stock_pb2_grpc
 from usecase.base import AbstractStockUsecase
-from domain.stock import CreateStock
+from domain.stock import CreateStock, Stock
 from domain.enum import ActionType, ACTION_MAP, StockType, STOCK_MAP
 
 
@@ -58,6 +59,27 @@ class StockService(stock_pb2_grpc.StockService):
             context.set_details("Internal server error")
             raise grpc.RpcError("Internal server error")
 
+    def GetPortfolioInfo(self, request, context):
+        try:
+            user_id = request.user_id
+            info = self.stock_usecase.get_portfolio_info(user_id=user_id)
+
+            return stock_pb2.GetPortfolioInfoResp(
+                user_id=user_id,
+                total_portfolio_value=info.total_portfolio_value,
+                total_gain=info.total_gain,
+                roi=info.roi,
+            )
+        except Exception as e:
+            logging.error(
+                "Failed to get portfolio info for user_id=%s: %s",
+                request.user_id,
+                str(e),
+            )
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal server error")
+            raise grpc.RpcError("Internal server error")
+
     def _map_action_type(self, action: int) -> ActionType:
         if action not in ACTION_MAP:
             raise ValueError(f"Invalid action type: {action}. Must be 1 (BUY), 2 (SELL), or 3 (TRANSFER).")
@@ -68,7 +90,7 @@ class StockService(stock_pb2_grpc.StockService):
             raise ValueError(f"Invalid stock type: {stock_type}. Must be 1 (STOCKS), 2 (ETF).")
         return STOCK_MAP[stock_type]
 
-    def _convert_to_proto_stock_list(self, stock_list):
+    def _convert_to_proto_stock_list(self, stock_list: ListType[Stock]):
         return [
             stock_pb2.Stock(
                 id=stock.id,
