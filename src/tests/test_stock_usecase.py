@@ -1,9 +1,8 @@
 import pytest
-from datetime import datetime, timezone
 from unittest.mock import Mock, ANY, patch
 from usecase.stock import StockUsecase
 from domain.stock import CreateStock, Stock
-from domain.portfolio import Portfolio, Holding
+from domain.portfolio import Portfolio, Holding, PortfolioInfo
 from domain.enum import ActionType, StockType
 
 
@@ -15,7 +14,7 @@ def stock_usecase():
     return usecase, stock_repo, portfolio_repo
 
 
-class TestStockUsecase:
+class TestStockUsecaseCreate:
     def test_create_transfer_new_portfolio(self, stock_usecase):
         # Arrange
         usecase, stock_repo, portfolio_repo = stock_usecase
@@ -375,6 +374,8 @@ class TestStockUsecase:
         portfolio_repo.update.assert_called_once_with(portfolio=ANY)  # Portfolio may vary, so use ANY
         stock_repo.create.assert_called_once_with(stock)
 
+
+class TestStockUsecaseList:
     def test_list(self, stock_usecase):
         # Arrange
         usecase, mock_repo, _ = stock_usecase
@@ -427,143 +428,8 @@ class TestStockUsecase:
             usecase.list(user_id)
         mock_repo.list.assert_called_once_with(user_id)
 
-    def test_calculate_total_roi_no_portfolio(self, stock_usecase):
-        # Arrange
-        usecase, _, portfolio_repo = stock_usecase
-        user_id = 1
-        portfolio_repo.get.return_value = None
 
-        # Act
-        result = usecase.calculate_total_roi(user_id)
-
-        # Assert
-        portfolio_repo.get.assert_called_once_with(user_id=user_id)
-        assert result == 0.0
-
-    def test_calculate_total_roi_no_total_money_in(self, stock_usecase):
-        # Arrange
-        usecase, _, portfolio_repo = stock_usecase
-        user_id = 1
-        portfolio = Portfolio(
-            user_id=user_id,
-            cash_balance=0.0,
-            total_money_in=0.0,
-            holdings=[],
-            created_at=ANY,
-            updated_at=ANY,
-        )
-        portfolio_repo.get.return_value = portfolio
-
-        # Act
-        result = usecase.calculate_total_roi(user_id)
-
-        # Assert
-        portfolio_repo.get.assert_called_once_with(user_id=user_id)
-        assert result == 0.0
-
-    def test_calculate_total_roi_no_holdings(self, stock_usecase):
-        # Arrange
-        usecase, _, portfolio_repo = stock_usecase
-        user_id = 1
-        portfolio = Portfolio(
-            user_id=user_id,
-            cash_balance=1000.0,
-            total_money_in=1000.0,
-            holdings=[],
-            created_at=ANY,
-            updated_at=ANY,
-        )
-        portfolio_repo.get.return_value = portfolio
-
-        # Act
-        result = usecase.calculate_total_roi(user_id)
-
-        # Assert
-        portfolio_repo.get.assert_called_once_with(user_id=user_id)
-        assert result == 0.0  # ROI = ((1000 - 1000) / 1000) * 100 = 0.0
-
-    @patch.object(StockUsecase, "_get_stock_price")
-    def test_calculate_total_roi_with_holdings(self, mock_get_stock_price, stock_usecase):
-        # Arrange
-        usecase, _, portfolio_repo = stock_usecase
-        user_id = 1
-        portfolio = Portfolio(
-            user_id=user_id,
-            cash_balance=1000.0,
-            total_money_in=5000.0,
-            holdings=[
-                Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0),
-                Holding(symbol="GOOGL", shares=5, stock_type=StockType.STOCKS, total_cost=2000.0),
-                Holding(
-                    symbol="TSLA", shares=0, stock_type=StockType.STOCKS, total_cost=0.0
-                ),  # Zero shares, should be ignored
-            ],
-            created_at=ANY,
-            updated_at=ANY,
-        )
-        portfolio_repo.get.return_value = portfolio
-        mock_get_stock_price.return_value = {
-            "AAPL": 200.0,  # 10 shares * 200 = 2000
-            "GOOGL": 3000.0,  # 5 shares * 3000 = 15000
-        }
-
-        # Act
-        result = usecase.calculate_total_roi(user_id)
-
-        # Assert
-        portfolio_repo.get.assert_called_once_with(user_id=user_id)
-        mock_get_stock_price.assert_called_once_with(
-            stock_info=[("AAPL", StockType.STOCKS), ("GOOGL", StockType.STOCKS)]
-        )
-        # Total value = 2000 (AAPL) + 15000 (GOOGL) + 1000 (cash) = 18000
-        # ROI = ((18000 - 5000) / 5000) * 100 = 260.0
-        assert result == 260.0
-
-    @patch.object(StockUsecase, "_get_stock_price")
-    def test_calculate_total_roi_with_missing_prices(self, mock_get_stock_price, stock_usecase):
-        # Arrange
-        usecase, _, portfolio_repo = stock_usecase
-        user_id = 1
-        portfolio = Portfolio(
-            user_id=user_id,
-            cash_balance=1000.0,
-            total_money_in=5000.0,
-            holdings=[
-                Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0),
-                Holding(symbol="INVALID", shares=5, stock_type=StockType.STOCKS, total_cost=2000.0),
-            ],
-            created_at=ANY,
-            updated_at=ANY,
-        )
-        portfolio_repo.get.return_value = portfolio
-        mock_get_stock_price.return_value = {
-            "AAPL": 200.0,  # 10 shares * 200 = 2000
-            "INVALID": 0.0,  # No price available
-        }
-
-        # Act
-        result = usecase.calculate_total_roi(user_id)
-
-        # Assert
-        portfolio_repo.get.assert_called_once_with(user_id=user_id)
-        mock_get_stock_price.assert_called_once_with(
-            stock_info=[("AAPL", StockType.STOCKS), ("INVALID", StockType.STOCKS)]
-        )
-        # Total value = 2000 (AAPL) + 0 (INVALID) + 1000 (cash) = 3000
-        # ROI = ((3000 - 5000) / 5000) * 100 = -40.0
-        assert result == -40.0
-
-    def test_calculate_total_roi_handles_repository_error(self, stock_usecase):
-        # Arrange
-        usecase, _, portfolio_repo = stock_usecase
-        user_id = 1
-        portfolio_repo.get.side_effect = Exception("Portfolio repository error")
-
-        # Act/Assert
-        with pytest.raises(Exception, match="Portfolio repository error"):
-            usecase.calculate_total_roi(user_id)
-        portfolio_repo.get.assert_called_once_with(user_id=user_id)
-
+class TestStockUsecaseGetStockPrice:
     @patch("usecase.stock.yf.Tickers")
     def test_get_stock_price_success_stocks(self, mock_yf_tickers, stock_usecase):
         # Arrange
@@ -690,3 +556,107 @@ class TestStockUsecase:
         # Assert
         mock_yf_tickers.assert_called_once_with(["AAPL", "SPY"])
         assert result == {"AAPL": 0.0, "SPY": 0.0}
+
+
+class TestStockUsecaseGetPortfolioInfo:
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_portfolio_info_no_portfolio(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio_repo.get.return_value = None
+        expected_result = PortfolioInfo(user_id=user_id, total_portfolio_value=0.0, total_gain=0.0, roi=0.0)
+
+        # Act
+        result = usecase.get_portfolio_info(user_id)
+
+        # Assert
+        portfolio_repo.get.assert_called_once_with(user_id=user_id)
+        mock_get_stock_price.assert_not_called()
+        assert result == expected_result
+
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_portfolio_info_empty_portfolio(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio = Portfolio(
+            user_id=user_id,
+            cash_balance=1000.0,
+            total_money_in=0.0,
+            holdings=[],
+            created_at=ANY,
+            updated_at=ANY,
+        )
+        portfolio_repo.get.return_value = portfolio
+        expected_result = PortfolioInfo(user_id=user_id, total_portfolio_value=0.0, total_gain=0.0, roi=0.0)
+
+        # Act
+        result = usecase.get_portfolio_info(user_id)
+
+        # Assert
+        portfolio_repo.get.assert_called_once_with(user_id=user_id)
+        mock_get_stock_price.assert_not_called()
+        assert result == expected_result
+
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_portfolio_info_no_valid_holdings(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio = Portfolio(
+            user_id=user_id,
+            cash_balance=1000.0,
+            total_money_in=2000.0,
+            holdings=[Holding(symbol="AAPL", shares=0, stock_type=StockType.STOCKS, total_cost=0.0)],
+            created_at=ANY,
+            updated_at=ANY,
+        )
+        portfolio_repo.get.return_value = portfolio
+        expected_result = PortfolioInfo(
+            user_id=user_id,
+            total_portfolio_value=1000.0,
+            total_gain=-1000.0,
+            roi=-50.0,
+        )
+
+        # Act
+        result = usecase.get_portfolio_info(user_id)
+
+        # Assert
+        portfolio_repo.get.assert_called_once_with(user_id=user_id)
+        mock_get_stock_price.assert_not_called()
+        assert result == expected_result
+
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_portfolio_info_with_valid_holdings(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio = Portfolio(
+            user_id=user_id,
+            cash_balance=1000.0,
+            total_money_in=2000.0,
+            holdings=[
+                Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0),
+                Holding(symbol="SPY", shares=5, stock_type=StockType.ETF, total_cost=1000.0),
+            ],
+            created_at=ANY,
+            updated_at=ANY,
+        )
+        mock_get_stock_price.return_value = {"AAPL": 200.0, "SPY": 400.0}
+        portfolio_repo.get.return_value = portfolio
+        expected_result = PortfolioInfo(
+            user_id=user_id,
+            total_portfolio_value=5000.0,
+            total_gain=3000.0,
+            roi=150,
+        )
+
+        # Act
+        result = usecase.get_portfolio_info(user_id)
+
+        # Assert
+        portfolio_repo.get.assert_called_once_with(user_id=user_id)
+        mock_get_stock_price.assert_called_once_with(stock_info=[("AAPL", StockType.STOCKS), ("SPY", StockType.ETF)])
+        assert result == expected_result
