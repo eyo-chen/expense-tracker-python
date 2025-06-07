@@ -662,9 +662,9 @@ class TestStockUsecaseGetPortfolioInfo:
         assert result == expected_result
 
 
-class TestStockUsecaseGetStockInfoList:
+class TestStockUsecaseGetStockInfo:
     @patch.object(StockUsecase, "_get_stock_price")
-    def test_get_stock_info_list_no_portfolio(self, mock_get_stock_price, stock_usecase):
+    def test_get_stock_info_no_portfolio(self, mock_get_stock_price, stock_usecase):
         # Arrange
         usecase, _, portfolio_repo = stock_usecase
         user_id = 1
@@ -672,7 +672,7 @@ class TestStockUsecaseGetStockInfoList:
         expected_result = {StockType.ETF.value: [], StockType.STOCKS.value: [], "CASH": []}
 
         # Act
-        result = usecase.get_stock_info_list(user_id)
+        result = usecase.get_stock_info(user_id)
 
         # Assert
         portfolio_repo.get.assert_called_once_with(user_id=user_id)
@@ -680,7 +680,7 @@ class TestStockUsecaseGetStockInfoList:
         assert result == expected_result
 
     @patch.object(StockUsecase, "_get_stock_price")
-    def test_get_stock_info_list_empty_portfolio(self, mock_get_stock_price, stock_usecase):
+    def test_get_stock_info_empty_portfolio(self, mock_get_stock_price, stock_usecase):
         # Arrange
         usecase, _, portfolio_repo = stock_usecase
         user_id = 1
@@ -696,7 +696,7 @@ class TestStockUsecaseGetStockInfoList:
         expected_result = {StockType.ETF.value: [], StockType.STOCKS.value: [], "CASH": []}
 
         # Act
-        result = usecase.get_stock_info_list(user_id)
+        result = usecase.get_stock_info(user_id)
 
         # Assert
         portfolio_repo.get.assert_called_once_with(user_id=user_id)
@@ -704,7 +704,7 @@ class TestStockUsecaseGetStockInfoList:
         assert result == expected_result
 
     @patch.object(StockUsecase, "_get_stock_price")
-    def test_get_stock_info_list_no_valid_holdings(self, mock_get_stock_price, stock_usecase):
+    def test_get_stock_info_no_valid_holdings(self, mock_get_stock_price, stock_usecase):
         # Arrange
         usecase, _, portfolio_repo = stock_usecase
         user_id = 1
@@ -720,7 +720,7 @@ class TestStockUsecaseGetStockInfoList:
         expected_result = {StockType.ETF.value: [], StockType.STOCKS.value: [], "CASH": []}
 
         # Act
-        result = usecase.get_stock_info_list(user_id)
+        result = usecase.get_stock_info(user_id)
 
         # Assert
         portfolio_repo.get.assert_called_once_with(user_id=user_id)
@@ -728,7 +728,7 @@ class TestStockUsecaseGetStockInfoList:
         assert result == expected_result
 
     @patch.object(StockUsecase, "_get_stock_price")
-    def test_get_stock_info_list_with_valid_holdings(self, mock_get_stock_price, stock_usecase):
+    def test_get_stock_info_with_valid_holdings(self, mock_get_stock_price, stock_usecase):
         # Arrange
         usecase, _, portfolio_repo = stock_usecase
         user_id = 1
@@ -793,7 +793,7 @@ class TestStockUsecaseGetStockInfoList:
         }
 
         # Act
-        result = usecase.get_stock_info_list(user_id)
+        result = usecase.get_stock_info(user_id)
 
         # Assert
         portfolio_repo.get.assert_called_once_with(user_id=user_id)

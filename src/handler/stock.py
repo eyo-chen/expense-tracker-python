@@ -5,7 +5,7 @@ import grpc
 import proto.stock_pb2 as stock_pb2
 import proto.stock_pb2_grpc as stock_pb2_grpc
 from usecase.base import AbstractStockUsecase
-from domain.stock import CreateStock, Stock
+from domain.stock import CreateStock, Stock, StockInfo
 from domain.enum import ActionType, ACTION_MAP, StockType, STOCK_MAP
 
 
@@ -80,6 +80,22 @@ class StockService(stock_pb2_grpc.StockService):
             context.set_details("Internal server error")
             raise grpc.RpcError("Internal server error")
 
+    def GetStockInfo(self, request, context):
+        try:
+            user_id = request.user_id
+            stock_info = self.stock_usecase.get_stock_info(user_id=user_id)
+
+            return self._convert_to_proto_stock_info(stock_info=stock_info)
+        except Exception as e:
+            logging.error(
+                "Failed to get stock info for user_id=%s: %s",
+                request.user_id,
+                str(e),
+            )
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal server error")
+            raise grpc.RpcError("Internal server error")
+
     def _map_action_type(self, action: int) -> ActionType:
         if action not in ACTION_MAP:
             raise ValueError(f"Invalid action type: {action}. Must be 1 (BUY), 2 (SELL), or 3 (TRANSFER).")
@@ -104,4 +120,23 @@ class StockService(stock_pb2_grpc.StockService):
                 updated_at=stock.updated_at,
             )
             for stock in stock_list
+        ]
+
+    def _convert_to_proto_stock_info(self, stock_info: StockInfo):
+        return stock_pb2.GetStockInfoResp(
+            stocks=self._convert_to_proto_stock_info_list(stock_info[StockType.STOCKS.value]),
+            etf=self._convert_to_proto_stock_info_list(stock_info[StockType.ETF.value]),
+            cash=self._convert_to_proto_stock_info_list(stock_info["CASH"]),
+        )
+
+    def _convert_to_proto_stock_info_list(self, stock_info_list: ListType[StockInfo]):
+        return [
+            stock_pb2.StockInfo(
+                symbol=stock_info.symbol,
+                quantity=stock_info.quantity,
+                price=stock_info.price,
+                avg_cost=stock_info.avg_cost,
+                percentage=stock_info.percentage,
+            )
+            for stock_info in stock_info_list
         ]

@@ -105,7 +105,7 @@ class StockUsecase(AbstractStockUsecase):
             roi=roi,
         )
 
-    def get_stock_info_list(self, user_id: int) -> Dict[str, List[StockInfo]]:
+    def get_stock_info(self, user_id: int) -> Dict[str, List[StockInfo]]:
         result = {StockType.ETF.value: [], StockType.STOCKS.value: [], "CASH": []}
         portfolio = self.portfolio_repo.get(user_id=user_id)
         if portfolio is None or portfolio.total_money_in == 0.0:
