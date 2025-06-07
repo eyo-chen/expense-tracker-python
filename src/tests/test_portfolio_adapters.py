@@ -84,3 +84,48 @@ class TestPortfolioRepository:
         assert result["holdings"][0]["symbol"] == "AAPL"
         assert result["holdings"][0]["shares"] == 20
         assert result["holdings"][0]["total_cost"] == 3000.0
+
+    def test_get_existing_portfolio(self, portfolio_repository):
+        # Arrange
+        created_at = datetime.now(timezone.utc)
+        portfolio = Portfolio(
+            user_id=1,
+            cash_balance=1000.0,
+            total_money_in=1000.0,
+            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            created_at=created_at,
+            updated_at=created_at,
+        )
+        portfolio_repository.collection.insert_one(asdict(portfolio))
+
+        # Action
+        result = portfolio_repository.get(user_id=1)
+
+        # Assertion
+        assert result is not None
+        assert result.user_id == portfolio.user_id
+        assert result.cash_balance == portfolio.cash_balance
+        assert result.total_money_in == portfolio.total_money_in
+        assert len(result.holdings) == 1
+        assert result.holdings[0].symbol == "AAPL"
+        assert result.holdings[0].shares == 10
+        assert result.holdings[0].total_cost == 1500.0
+
+    def test_get_non_existent_portfolio(self, portfolio_repository):
+        # Arrange
+        created_at = datetime.now(timezone.utc)
+        portfolio = Portfolio(
+            user_id=1,
+            cash_balance=1000.0,
+            total_money_in=1000.0,
+            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            created_at=created_at,
+            updated_at=created_at,
+        )
+        portfolio_repository.collection.insert_one(asdict(portfolio))
+
+        # Action
+        result = portfolio_repository.get(user_id=999)
+
+        # Assertion
+        assert result is None
