@@ -1,5 +1,6 @@
 import pytest
 from datetime import datetime, timezone
+from unittest.mock import ANY
 from dataclasses import asdict
 from pymongo import MongoClient
 from domain.portfolio import Portfolio, Holding
@@ -60,7 +61,7 @@ class TestPortfolioRepository:
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
-        result = portfolio_repository.collection.insert_one(asdict(initial_portfolio))
+        portfolio_repository.collection.insert_one(asdict(initial_portfolio))
 
         updated_portfolio = Portfolio(
             user_id=1,
@@ -84,3 +85,49 @@ class TestPortfolioRepository:
         assert result["holdings"][0]["symbol"] == "AAPL"
         assert result["holdings"][0]["shares"] == 20
         assert result["holdings"][0]["total_cost"] == 3000.0
+
+    def test_get_existing_portfolio(self, portfolio_repository):
+        # Arrange
+        created_at = datetime.now(timezone.utc)
+        portfolio = Portfolio(
+            user_id=1,
+            cash_balance=1000.0,
+            total_money_in=1000.0,
+            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            created_at=created_at,
+            updated_at=created_at,
+        )
+        portfolio_repository.collection.insert_one(asdict(portfolio))
+        expected_result = Portfolio(
+            user_id=1,
+            cash_balance=1000.0,
+            total_money_in=1000.0,
+            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            created_at=ANY,
+            updated_at=ANY,
+        )
+
+        # Action
+        result = portfolio_repository.get(user_id=1)
+
+        # Assertion
+        assert result == expected_result
+
+    def test_get_non_existent_portfolio(self, portfolio_repository):
+        # Arrange
+        created_at = datetime.now(timezone.utc)
+        portfolio = Portfolio(
+            user_id=1,
+            cash_balance=1000.0,
+            total_money_in=1000.0,
+            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            created_at=created_at,
+            updated_at=created_at,
+        )
+        portfolio_repository.collection.insert_one(asdict(portfolio))
+
+        # Action
+        result = portfolio_repository.get(user_id=999)
+
+        # Assertion
+        assert result is None
