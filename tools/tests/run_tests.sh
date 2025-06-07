@@ -27,7 +27,10 @@ cleanup() {
     print_emoji_line "<=" "${BLUE}"
     echo -e "<= Cleaning up resources..."
     print_emoji_line "<=" "${BLUE}"
-    docker-compose down -v mongodb-test
+    # Only stop MongoDB if it was started
+    if [ "$MONGO_STARTED" = "true" ]; then
+        docker-compose down -v mongodb-test
+    fi
     rm -rf __pycache__ tests/__pycache__ coverage.out .coverage
     # Only remove coverage.xml if it exists
     [ -f coverage.xml ] && rm -f coverage.xml
@@ -36,28 +39,44 @@ cleanup() {
 # Set trap to call cleanup on exit (success or failure)
 trap cleanup EXIT
 
-echo -e "${YELLOW}"
-print_emoji_line "=>" "${YELLOW}"
-echo -e "=> Starting test environment..."
-print_emoji_line "=>" "${YELLOW}"
-docker-compose up -d mongodb-test
-uv run tools/tests/wait_for_mongo.py
+# Check if a test file path is provided and if it contains "_adapters"
+TEST_FILE=$1
+MONGO_STARTED="false"
+
+if [ -n "$TEST_FILE" ]; then
+    echo -e "Running tests for: $TEST_FILE"
+    TEST_PATH="$TEST_FILE"
+    # Check if the test file contains "_adapters"
+    if [[ "$TEST_FILE" == *"_adapters"* ]]; then
+        echo -e "${YELLOW}"
+        print_emoji_line "=>" "${YELLOW}"
+        echo -e "=> Starting test environment with MongoDB..."
+        print_emoji_line "=>" "${YELLOW}"
+        docker-compose up -d mongodb-test
+        uv run tools/tests/wait_for_mongo.py
+        MONGO_STARTED="true"
+    else
+        echo -e "${YELLOW}"
+        print_emoji_line "=>" "${YELLOW}"
+        echo -e "=> Running tests without MongoDB..."
+        print_emoji_line "=>" "${YELLOW}"
+    fi
+else
+    echo -e "${YELLOW}"
+    print_emoji_line "=>" "${YELLOW}"
+    echo -e "=> Starting test environment with MongoDB for all tests..."
+    print_emoji_line "=>" "${YELLOW}"
+    docker-compose up -d mongodb-test
+    uv run tools/tests/wait_for_mongo.py
+    TEST_PATH="src/tests/"
+    MONGO_STARTED="true"
+fi
 
 # Conditionally set coverage report options based on CI environment
 if [ "$CI" = "true" ]; then
     cov_report="--cov-report=term-missing --cov-report=xml"
 else
     cov_report="--cov-report=term-missing"
-fi
-
-# Check if a test file path is provided as an argument
-TEST_FILE=$1
-if [ -n "$TEST_FILE" ]; then
-    echo -e "Running tests for: $TEST_FILE"
-    TEST_PATH="$TEST_FILE"
-else
-    echo -e "Running all tests under src/tests"
-    TEST_PATH="src/tests/"
 fi
 
 # Run pytest with coverage
