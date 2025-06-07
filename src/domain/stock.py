@@ -77,3 +77,12 @@ class Stock:
 
     def as_dict(self) -> StockDict:
         return asdict(self, dict_factory=custom_dict_factory)
+
+
+@dataclass
+class StockInfo:
+    symbol: str
+    quantity: int
+    price: float
+    avg_cost: float
+    percentage: float
