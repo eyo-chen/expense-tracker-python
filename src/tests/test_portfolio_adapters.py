@@ -1,10 +1,10 @@
 import pytest
 from datetime import datetime, timezone
 from unittest.mock import ANY
-from dataclasses import asdict
 from pymongo import MongoClient
-from domain.portfolio import Portfolio, Holding
 from adapters.portfolio import PortfolioRepository
+from domain.portfolio import Portfolio, Holding
+from domain.enum import StockType
 
 
 @pytest.fixture(scope="module")
@@ -33,7 +33,7 @@ class TestPortfolioRepository:
             user_id=1,
             cash_balance=1000.0,
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            holdings=[Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0)],
             created_at=created_at,
             updated_at=created_at,
         )
@@ -49,6 +49,7 @@ class TestPortfolioRepository:
         assert len(result["holdings"]) == 1
         assert result["holdings"][0]["symbol"] == "AAPL"
         assert result["holdings"][0]["shares"] == 10
+        assert result["holdings"][0]["stock_type"] == StockType.STOCKS.value
         assert result["holdings"][0]["total_cost"] == 1500.0
 
     def test_update_existing_portfolio(self, portfolio_repository):
@@ -57,17 +58,17 @@ class TestPortfolioRepository:
             user_id=1,
             cash_balance=1000.0,
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            holdings=[Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0)],
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
-        portfolio_repository.collection.insert_one(asdict(initial_portfolio))
+        result = portfolio_repository.collection.insert_one(initial_portfolio.as_dict())
 
         updated_portfolio = Portfolio(
             user_id=1,
             cash_balance=2000.0,
             total_money_in=2000.0,
-            holdings=[Holding(symbol="AAPL", shares=20, total_cost=3000.0)],
+            holdings=[Holding(symbol="AAPL", shares=20, stock_type=StockType.STOCKS, total_cost=3000.0)],
             created_at=initial_portfolio.created_at,
             updated_at=datetime.now(timezone.utc),
         )
@@ -84,6 +85,7 @@ class TestPortfolioRepository:
         assert len(result["holdings"]) == 1
         assert result["holdings"][0]["symbol"] == "AAPL"
         assert result["holdings"][0]["shares"] == 20
+        assert result["holdings"][0]["stock_type"] == StockType.STOCKS.value
         assert result["holdings"][0]["total_cost"] == 3000.0
 
     def test_get_existing_portfolio(self, portfolio_repository):
@@ -93,16 +95,16 @@ class TestPortfolioRepository:
             user_id=1,
             cash_balance=1000.0,
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            holdings=[Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0)],
             created_at=created_at,
             updated_at=created_at,
         )
-        portfolio_repository.collection.insert_one(asdict(portfolio))
+        portfolio_repository.collection.insert_one(portfolio.as_dict())
         expected_result = Portfolio(
             user_id=1,
             cash_balance=1000.0,
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            holdings=[Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0)],
             created_at=ANY,
             updated_at=ANY,
         )
@@ -120,11 +122,11 @@ class TestPortfolioRepository:
             user_id=1,
             cash_balance=1000.0,
             total_money_in=1000.0,
-            holdings=[Holding(symbol="AAPL", shares=10, total_cost=1500.0)],
+            holdings=[Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0)],
             created_at=created_at,
             updated_at=created_at,
         )
-        portfolio_repository.collection.insert_one(asdict(portfolio))
+        portfolio_repository.collection.insert_one(portfolio.as_dict())
 
         # Action
         result = portfolio_repository.get(user_id=999)
