@@ -1,10 +1,14 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from datetime import datetime, timezone
 import yfinance as yf
-from domain.stock import CreateStock, Stock, ActionType
-from domain.portfolio import Portfolio, Holding
-from adapters.base import AbstractStockRepository, AbstractPortfolioRepository
 from .base import AbstractStockUsecase
+from adapters.base import AbstractStockRepository, AbstractPortfolioRepository
+from domain.portfolio import Portfolio, Holding
+from domain.stock import CreateStock, Stock
+from domain.enum import ActionType, StockType
+
+ETF_KEY = "navPrice"
+STOCK_KEY = "currentPrice"
 
 
 class StockUsecase(AbstractStockUsecase):
@@ -28,7 +32,7 @@ class StockUsecase(AbstractStockUsecase):
         symbol = stock.symbol
         price = stock.price
         quantity = stock.quantity
-        action_type = ActionType(stock.action_type)
+        action_type = stock.action_type
 
         if action_type == ActionType.TRANSFER:
             portfolio.cash_balance += price * quantity
@@ -38,7 +42,7 @@ class StockUsecase(AbstractStockUsecase):
 
             holding = next((h for h in portfolio.holdings if h.symbol == symbol), None)  # Find the first holding
             if not holding:
-                holding = Holding(symbol=symbol, shares=0, total_cost=0.0)
+                holding = Holding(symbol=symbol, shares=0, stock_type=stock.stock_type, total_cost=0.0)
                 portfolio.holdings.append(holding)
 
             holding.shares += quantity
@@ -70,37 +74,44 @@ class StockUsecase(AbstractStockUsecase):
         if portfolio is None or portfolio.total_money_in == 0.0:
             return 0.0
 
-        valid_holdings = [(holding.symbol, holding.shares) for holding in portfolio.holdings if holding.shares > 0]
+        valid_holdings = [
+            (holding.symbol, holding.shares, holding.stock_type) for holding in portfolio.holdings if holding.shares > 0
+        ]
         if not valid_holdings:
             # If no valid holdings, ROI depends only on cash balance
             return round(((portfolio.cash_balance - portfolio.total_money_in) / portfolio.total_money_in) * 100, 2)
 
         # Fetch prices in batch
-        stock_symbols = [symbol for symbol, _ in valid_holdings]
-        stock_price_by_symbol = self._get_stock_price(symbols=stock_symbols)
+        stock_info = [(symbol, stock_type) for symbol, _, stock_type in valid_holdings]
+        stock_price_by_symbol = self._get_stock_price(stock_info=stock_info)
 
         # Calculate total stock value
-        total_stock_price = sum(shares * stock_price_by_symbol.get(symbol, 0.0) for symbol, shares in valid_holdings)
+        total_stock_price = sum(shares * stock_price_by_symbol.get(symbol, 0.0) for symbol, shares, _ in valid_holdings)
 
         # Compute ROI
         total_value = total_stock_price + portfolio.cash_balance
         roi = ((total_value - portfolio.total_money_in) / portfolio.total_money_in) * 100
         return round(roi, 2)
 
-    def _get_stock_price(self, symbols: List[str]) -> Dict[str, float]:
-        if not symbols:
+    def _get_stock_price(self, stock_info: List[Tuple[str, StockType]]) -> Dict[str, float]:
+        if not stock_info:
             return {}
 
         try:
+            symbols = [symbol for symbol, _ in stock_info]
             tickers = yf.Tickers(symbols)
-            return {
-                symbol: (
-                    ticker.info.get("currentPrice", 0.0)
-                    if (ticker := tickers.tickers.get(symbol.upper())) is not None
-                    else 0.0
-                )
-                for symbol in symbols
-            }
+            stock_price_by_symbol = {}
+
+            for symbol, stock_type in stock_info:
+                ticker = tickers.tickers.get(symbol.upper())
+                if ticker is None:
+                    stock_price_by_symbol[symbol] = 0.0
+                    continue
+
+                price_field = STOCK_KEY if stock_type == StockType.STOCKS else ETF_KEY
+                stock_price_by_symbol[symbol] = ticker.info.get(price_field, 0.0)
+
+            return stock_price_by_symbol
         except Exception as e:
-            print(f"Error fetching prices for symbols {symbols}: {e}")
-            return {symbol.upper(): 0.0 for symbol in symbols}
+            print(f"Error fetching prices for symbols {[symbol for symbol, _ in stock_info]}: {e}")
+            return {symbol: 0.0 for symbol, _ in stock_info}s
