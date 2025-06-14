@@ -1,12 +1,11 @@
 import logging
 from datetime import datetime, timezone
-
 import grpc
 import proto.stock_pb2 as stock_pb2
 import proto.stock_pb2_grpc as stock_pb2_grpc
-
 from usecase.base import AbstractStockUsecase
-from domain.stock import CreateStock, ActionType, ACTION_MAP
+from domain.stock import CreateStock
+from domain.enum import ActionType, ACTION_MAP, StockType, STOCK_MAP
 
 
 class StockService(stock_pb2_grpc.StockService):
@@ -15,13 +14,13 @@ class StockService(stock_pb2_grpc.StockService):
 
     def Create(self, request, context):
         try:
-            self._validate_create_request(request)
             stock = CreateStock(
                 user_id=request.user_id,
                 symbol=request.symbol,
                 price=request.price,
                 quantity=request.quantity,
                 action_type=self._map_action_type(request.action),
+                stock_type=self._map_stock_type(request.stock_type),
                 created_at=datetime.now(timezone.utc),
             )
 
@@ -64,15 +63,10 @@ class StockService(stock_pb2_grpc.StockService):
             raise ValueError(f"Invalid action type: {action}. Must be 1 (BUY), 2 (SELL), or 3 (TRANSFER).")
         return ACTION_MAP[action]
 
-    def _validate_create_request(self, request):
-        if not request.user_id or request.user_id <= 0:
-            raise ValueError("user_id must be non-empty and greater than 0")
-        if not request.symbol or request.symbol.strip() == "":
-            raise ValueError("symbol must be a non-empty string")
-        if request.price <= 0:
-            raise ValueError("price must be greater than 0")
-        if request.quantity <= 0:
-            raise ValueError("quantity must be greater than 0")
+    def _map_stock_type(self, stock_type: int) -> StockType:
+        if stock_type not in STOCK_MAP:
+            raise ValueError(f"Invalid stock type: {stock_type}. Must be 1 (STOCKS), 2 (ETF).")
+        return STOCK_MAP[stock_type]
 
     def _convert_to_proto_stock_list(self, stock_list):
         return [
@@ -83,6 +77,7 @@ class StockService(stock_pb2_grpc.StockService):
                 price=stock.price,
                 quantity=stock.quantity,
                 action=stock.action_type.value,
+                stock_type=stock.stock_type.value,
                 created_at=stock.created_at,
                 updated_at=stock.updated_at,
             )

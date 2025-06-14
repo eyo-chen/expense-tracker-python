@@ -1,13 +1,12 @@
 import pytest
 import grpc
 import proto.stock_pb2 as stock_pb2
-
 from datetime import datetime, timezone
 from unittest.mock import Mock
-
-from domain.stock import CreateStock, ActionType, Stock
 from handler.stock import StockService
 from usecase.base import AbstractStockUsecase
+from domain.stock import CreateStock, Stock
+from domain.enum import ActionType, StockType
 
 
 class TestStockServiceCreate:
@@ -35,6 +34,7 @@ class TestStockServiceCreate:
         request.price = 100.0
         request.quantity = 10
         request.action = 1  # Maps to ActionType.BUY
+        request.stock_type = 1  # Maps to StockType.STOCKS
         return request
 
     def test_success(self, mock_stock_usecase, mock_context, valid_request):
@@ -68,6 +68,7 @@ class TestStockServiceCreate:
         request.price = 100.0
         request.quantity = 10
         request.action = 1
+        request.stock_type = 1
 
         # Act/Assertion
         with pytest.raises(grpc.RpcError) as exc_info:
@@ -86,6 +87,7 @@ class TestStockServiceCreate:
         request.price = 100.0
         request.quantity = 10
         request.action = 1
+        request.stock_type = 1
 
         # Act/Assertion
         with pytest.raises(grpc.RpcError) as exc_info:
@@ -104,6 +106,7 @@ class TestStockServiceCreate:
         request.price = 0.0  # Invalid
         request.quantity = 10
         request.action = 1
+        request.stock_type = 1
 
         # Act/Assertion
         with pytest.raises(grpc.RpcError) as exc_info:
@@ -122,6 +125,7 @@ class TestStockServiceCreate:
         request.price = 100.0
         request.quantity = 0  # Invalid
         request.action = 1
+        request.stock_type = 1
 
         # Act/Assertion
         with pytest.raises(grpc.RpcError) as exc_info:
@@ -140,6 +144,7 @@ class TestStockServiceCreate:
         request.price = 100.0
         request.quantity = 10
         request.action = 4  # Invalid
+        request.stock_type = 1
 
         # Act/Assertion
         with pytest.raises(grpc.RpcError) as exc_info:
@@ -180,6 +185,7 @@ class TestStockServiceList:
                 price=100.0,
                 quantity=10,
                 action_type=ActionType.BUY,
+                stock_type=StockType.STOCKS,
                 created_at=datetime(2023, 1, 1, tzinfo=timezone.utc),
                 updated_at=datetime(2023, 1, 1, tzinfo=timezone.utc),  # Include if required
             ),
@@ -190,6 +196,7 @@ class TestStockServiceList:
                 price=1500.0,
                 quantity=5,
                 action_type=ActionType.SELL,
+                stock_type=StockType.STOCKS,
                 created_at=datetime(2023, 1, 2, tzinfo=timezone.utc),
                 updated_at=datetime(2023, 1, 2, tzinfo=timezone.utc),  # Include if required
             ),
@@ -227,12 +234,14 @@ class TestStockServiceList:
         assert response.stock_list[0].price == 100.0
         assert response.stock_list[0].quantity == 10
         assert response.stock_list[0].action == ActionType.BUY.value
+        assert response.stock_list[0].stock_type == StockType.STOCKS.value
         assert response.stock_list[1].id == "stock_124"
         assert response.stock_list[1].user_id == 1
         assert response.stock_list[1].symbol == "GOOGL"
         assert response.stock_list[1].price == 1500.0
         assert response.stock_list[1].quantity == 5
         assert response.stock_list[1].action == ActionType.SELL.value
+        assert response.stock_list[1].stock_type == StockType.STOCKS.value
         mock_stock_usecase.list.assert_called_once_with(1)
         mock_context.set_code.assert_not_called()
         mock_context.set_details.assert_not_called()
