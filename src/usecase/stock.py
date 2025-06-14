@@ -114,4 +114,4 @@ class StockUsecase(AbstractStockUsecase):
             return stock_price_by_symbol
         except Exception as e:
             print(f"Error fetching prices for symbols {[symbol for symbol, _ in stock_info]}: {e}")
-            return {symbol: 0.0 for symbol, _ in stock_info}s
+            return {symbol: 0.0 for symbol, _ in stock_info}
