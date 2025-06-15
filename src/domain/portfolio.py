@@ -57,3 +57,11 @@ class Portfolio:
 
     def as_dict(self) -> PortfolioDict:
         return asdict(self, dict_factory=custom_dict_factory)
+
+
+@dataclass
+class PortfolioInfo:
+    user_id: int
+    total_portfolio_value: float
+    total_gain: float
+    roi: float
