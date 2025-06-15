@@ -1,11 +1,11 @@
 import pytest
 from datetime import datetime, timezone
-
 from pymongo import MongoClient
+from unittest.mock import ANY
 from bson.objectid import ObjectId
-
-from domain.stock import CreateStock, ActionType, Stock
 from adapters.stock import StockRepository
+from domain.stock import CreateStock, Stock
+from domain.enum import ActionType, StockType
 
 
 @pytest.fixture(scope="module")
@@ -34,7 +34,8 @@ class TestStockRepository:
             price=150.25,
             quantity=100,
             action_type=ActionType.BUY,
-            created_at=datetime.utcnow(),
+            stock_type=StockType.STOCKS,
+            created_at=datetime.now(timezone.utc),
         )
 
         expected_result = {
@@ -43,8 +44,7 @@ class TestStockRepository:
             "price": mock_stock.price,
             "quantity": mock_stock.quantity,
             "action_type": mock_stock.action_type.value,
-            "created_at": mock_stock.created_at,
-            "updated_at": mock_stock.created_at,
+            "stock_type": mock_stock.stock_type.value,
         }
 
         stock_id = stock_repository.create(mock_stock)
@@ -59,13 +59,15 @@ class TestStockRepository:
 
     def test_create_multiple_stocks(self, stock_repository):
         # Create mock stocks
+        created_at = datetime.now(timezone.utc)
         mock_stock1 = CreateStock(
             user_id=1,
             symbol="TSLA",
             price=110.25,
             quantity=50,
             action_type=ActionType.BUY,
-            created_at=datetime.utcnow(),
+            stock_type=StockType.STOCKS,
+            created_at=created_at,
         )
         mock_stock2 = CreateStock(
             user_id=1,
@@ -73,7 +75,8 @@ class TestStockRepository:
             price=2500.50,
             quantity=10,
             action_type=ActionType.SELL,
-            created_at=datetime.utcnow(),
+            stock_type=StockType.STOCKS,
+            created_at=created_at,
         )
 
         # Define expected results
@@ -83,8 +86,7 @@ class TestStockRepository:
             "price": mock_stock1.price,
             "quantity": mock_stock1.quantity,
             "action_type": mock_stock1.action_type.value,
-            "created_at": mock_stock1.created_at,
-            "updated_at": mock_stock1.created_at,
+            "stock_type": mock_stock1.stock_type.value,
         }
         expected_result2 = {
             "user_id": mock_stock2.user_id,
@@ -92,8 +94,7 @@ class TestStockRepository:
             "price": mock_stock2.price,
             "quantity": mock_stock2.quantity,
             "action_type": mock_stock2.action_type.value,
-            "created_at": mock_stock2.created_at,
-            "updated_at": mock_stock2.created_at,
+            "stock_type": mock_stock2.stock_type.value,
         }
         expected_data = [expected_result1, expected_result2]
 
@@ -127,6 +128,7 @@ class TestStockRepository:
             "price": 150.25,
             "quantity": 100,
             "action_type": ActionType.BUY.value,
+            "stock_type": StockType.STOCKS.value,
             "created_at": created_at,
             "updated_at": created_at,
         }
@@ -136,6 +138,7 @@ class TestStockRepository:
             "price": 110.25,
             "quantity": 50,
             "action_type": ActionType.SELL.value,
+            "stock_type": StockType.STOCKS.value,
             "created_at": created_at,
             "updated_at": created_at,
         }
@@ -145,6 +148,7 @@ class TestStockRepository:
             "price": 2500.50,
             "quantity": 10,
             "action_type": ActionType.BUY.value,
+            "stock_type": StockType.STOCKS.value,
             "created_at": created_at,
             "updated_at": created_at,
         }
@@ -167,6 +171,7 @@ class TestStockRepository:
                 price=mock_stock1["price"],
                 quantity=mock_stock1["quantity"],
                 action_type=ActionType(mock_stock1["action_type"]),
+                stock_type=StockType(mock_stock1["stock_type"]),
                 created_at=mock_stock1["created_at"],
                 updated_at=mock_stock1["updated_at"],
             ),
@@ -177,6 +182,7 @@ class TestStockRepository:
                 price=mock_stock2["price"],
                 quantity=mock_stock2["quantity"],
                 action_type=ActionType(mock_stock2["action_type"]),
+                stock_type=StockType(mock_stock2["stock_type"]),
                 created_at=mock_stock2["created_at"],
                 updated_at=mock_stock2["updated_at"],
             ),
@@ -198,6 +204,7 @@ class TestStockRepository:
                 stock.price,
                 stock.quantity,
                 stock.action_type,
+                stock.stock_type,
             )
             for stock in result
         }
@@ -209,6 +216,7 @@ class TestStockRepository:
                 stock.price,
                 stock.quantity,
                 stock.action_type,
+                stock.stock_type,
             )
             for stock in expected_stocks
         }
@@ -224,6 +232,7 @@ class TestStockRepository:
             "price": 150.25,
             "quantity": 100,
             "action_type": ActionType.BUY.value,
+            "stock_type": StockType.STOCKS.value,
             "created_at": created_at,
             "updated_at": created_at,
         }
@@ -233,6 +242,7 @@ class TestStockRepository:
             "price": 110.25,
             "quantity": 50,
             "action_type": ActionType.SELL.value,
+            "stock_type": StockType.STOCKS.value,
             "created_at": created_at,
             "updated_at": created_at,
         }
