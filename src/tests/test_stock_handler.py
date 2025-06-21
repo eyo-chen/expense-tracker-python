@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from handler.stock import StockService
 from usecase.base import AbstractStockUsecase
 from domain.stock import CreateStock, Stock
+from domain.portfolio import PortfolioInfo
 from domain.enum import ActionType, StockType
 
 
@@ -258,3 +259,62 @@ class TestStockServiceList:
         mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
         mock_context.set_details.assert_called_once_with("Internal server error")
         mock_stock_usecase.list.assert_called_once_with(1)
+
+
+class TestStockServiceGetPortfolioInfo:
+    # Fixture to create a mock stock_usecase
+    @pytest.fixture
+    def mock_stock_usecase(self):
+        usecase = Mock(spec=AbstractStockUsecase)
+        usecase.get_portfolio_info.return_value = PortfolioInfo(
+            user_id=1,
+            total_portfolio_value=2500.0,
+            total_gain=500.0,
+            roi=25.0,
+        )
+        return usecase
+
+    # Fixture to create a mock gRPC context
+    @pytest.fixture
+    def mock_context(self):
+        context = Mock()
+        context.set_code = Mock()
+        context.set_details = Mock()
+        return context
+
+    # Fixture to create a valid gRPC request
+    @pytest.fixture
+    def valid_request(self):
+        request = Mock()
+        request.user_id = 1
+        return request
+
+    def test_success(self, mock_stock_usecase, mock_context, valid_request):
+        # Arrange
+        service = StockService(mock_stock_usecase)
+
+        # Action
+        response = service.get_portfolio_info(valid_request, mock_context)
+
+        # Assertion
+        assert isinstance(response, stock_pb2.GetPortfolioInfoResp)
+        assert response.user_id == 1
+        assert response.total_portfolio_value == 2500.0
+        assert response.total_gain == 500.0
+        assert response.roi == 25.0
+        mock_stock_usecase.get_portfolio_info.assert_called_once_with(user_id=1)
+        mock_context.set_code.assert_not_called()
+        mock_context.set_details.assert_not_called()
+
+    def test_internal_error(self, mock_stock_usecase, mock_context, valid_request):
+        # Arrange
+        service = StockService(mock_stock_usecase)
+        mock_stock_usecase.get_portfolio_info.side_effect = Exception("Database error")  # Simulate internal error
+
+        # Act/Assertion
+        with pytest.raises(grpc.RpcError) as exc_info:
+            service.get_portfolio_info(valid_request, mock_context)
+        assert str(exc_info.value) == "Internal server error"
+        mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
+        mock_context.set_details.assert_called_once_with("Internal server error")
+        mock_stock_usecase.get_portfolio_info.assert_called_once_with(user_id=1)
