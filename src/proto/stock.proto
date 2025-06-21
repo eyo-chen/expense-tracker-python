@@ -56,8 +56,20 @@ message ListResp {
   repeated Stock stock_list = 1 [json_name = "stock_list"];
 }
 
+message GetPortfolioInfoReq {
+  int32 user_id = 1 [json_name = "user_id"];
+}
+
+message GetPortfolioInfoResp {
+  int32 user_id = 1 [json_name = "user_id"];
+  double total_portfolio_value = 2 [json_name = "total_portfolio_value"];
+  double total_gain = 3 [json_name = "total_gain"];
+  double roi = 4 [json_name = "roi"];
+}
+
+
 service StockService {
   rpc Create (CreateReq) returns (CreateResp) {}
-
   rpc List (ListReq) returns (ListResp) {}
+  rpc GetPortfolioInfo (GetPortfolioInfoReq) returns (GetPortfolioInfoResp) {}
 }
