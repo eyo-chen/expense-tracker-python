@@ -50,8 +50,6 @@ class Portfolio:
     updated_at: datetime
 
     def __post_init__(self):
-        if self.cash_balance < 0:
-            raise ValueError("cash_balance cannot be negative")
         if self.total_money_in < 0:
             raise ValueError("total_money_in cannot be negative")
 
