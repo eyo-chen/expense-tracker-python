@@ -294,7 +294,7 @@ class TestStockServiceGetPortfolioInfo:
         service = StockService(mock_stock_usecase)
 
         # Action
-        response = service.get_portfolio_info(valid_request, mock_context)
+        response = service.GetPortfolioInfo(valid_request, mock_context)
 
         # Assertion
         assert isinstance(response, stock_pb2.GetPortfolioInfoResp)
@@ -313,7 +313,7 @@ class TestStockServiceGetPortfolioInfo:
 
         # Act/Assertion
         with pytest.raises(grpc.RpcError) as exc_info:
-            service.get_portfolio_info(valid_request, mock_context)
+            service.GetPortfolioInfo(valid_request, mock_context)
         assert str(exc_info.value) == "Internal server error"
         mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
         mock_context.set_details.assert_called_once_with("Internal server error")
