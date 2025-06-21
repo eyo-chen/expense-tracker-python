@@ -13,7 +13,9 @@ class StockRepository(AbstractStockRepository):
         self.collection = self.db["stocks"]
 
     def create(self, stock: CreateStock) -> str:
-        result = self.collection.insert_one(stock.as_dict())
+        stock_dict = stock.as_dict()
+        stock_dict["updated_at"] = stock_dict["created_at"]
+        result = self.collection.insert_one(stock_dict)
         return str(result.inserted_id)
 
     def list(self, user_id: int) -> List[Stock]:
