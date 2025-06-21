@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import yfinance as yf
 from .base import AbstractStockUsecase
 from adapters.base import AbstractStockRepository, AbstractPortfolioRepository
-from domain.portfolio import Portfolio, Holding
+from domain.portfolio import Portfolio, Holding, PortfolioInfo
 from domain.stock import CreateStock, Stock
 from domain.enum import ActionType, StockType
 
@@ -69,17 +69,23 @@ class StockUsecase(AbstractStockUsecase):
     def list(self, user_id: int) -> List[Stock]:
         return self.stock_repo.list(user_id)
 
-    def calculate_total_roi(self, user_id: int) -> float:
+    def get_portfolio_info(self, user_id: int) -> PortfolioInfo:
         portfolio = self.portfolio_repo.get(user_id=user_id)
         if portfolio is None or portfolio.total_money_in == 0.0:
-            return 0.0
+            return PortfolioInfo(user_id=user_id, total_portfolio_value=0.0, total_gain=0.0, roi=0.0)
 
         valid_holdings = [
             (holding.symbol, holding.shares, holding.stock_type) for holding in portfolio.holdings if holding.shares > 0
         ]
         if not valid_holdings:
-            # If no valid holdings, ROI depends only on cash balance
-            return round(((portfolio.cash_balance - portfolio.total_money_in) / portfolio.total_money_in) * 100, 2)
+            return PortfolioInfo(
+                user_id=user_id,
+                total_portfolio_value=portfolio.cash_balance,
+                total_gain=portfolio.cash_balance - portfolio.total_money_in,
+                roi=round(
+                    ((portfolio.cash_balance - portfolio.total_money_in) / portfolio.total_money_in) * 100, 2
+                ),  # If no valid holdings, ROI depends only on cash balance
+            )
 
         # Fetch prices in batch
         stock_info = [(symbol, stock_type) for symbol, _, stock_type in valid_holdings]
@@ -90,8 +96,14 @@ class StockUsecase(AbstractStockUsecase):
 
         # Compute ROI
         total_value = total_stock_price + portfolio.cash_balance
-        roi = ((total_value - portfolio.total_money_in) / portfolio.total_money_in) * 100
-        return round(roi, 2)
+        roi = round(((total_value - portfolio.total_money_in) / portfolio.total_money_in) * 100, 2)
+
+        return PortfolioInfo(
+            user_id=user_id,
+            total_portfolio_value=total_value,
+            total_gain=total_value - portfolio.total_money_in,
+            roi=roi,
+        )
 
     def _get_stock_price(self, stock_info: List[Tuple[str, StockType]]) -> Dict[str, float]:
         if not stock_info:
