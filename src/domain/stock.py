@@ -28,6 +28,15 @@ class StockDict(TypedDict):
 
 
 @dataclass
+class StockInfo:
+    symbol: str
+    quantity: int
+    price: float
+    avg_cost: float
+    percentage: float
+
+
+@dataclass
 class CreateStock:
     user_id: int
     symbol: str

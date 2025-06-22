@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, ANY, patch
 from usecase.stock import StockUsecase
-from domain.stock import CreateStock, Stock
+from domain.stock import CreateStock, Stock, StockInfo
 from domain.portfolio import Portfolio, Holding, PortfolioInfo
 from domain.enum import ActionType, StockType
 
@@ -659,4 +659,150 @@ class TestStockUsecaseGetPortfolioInfo:
         # Assert
         portfolio_repo.get.assert_called_once_with(user_id=user_id)
         mock_get_stock_price.assert_called_once_with(stock_info=[("AAPL", StockType.STOCKS), ("SPY", StockType.ETF)])
+        assert result == expected_result
+
+
+class TestStockUsecaseGetStockInfoList:
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_stock_info_list_no_portfolio(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio_repo.get.return_value = None
+        expected_result = {StockType.ETF.value: [], StockType.STOCKS.value: [], "CASH": []}
+
+        # Act
+        result = usecase.get_stock_info_list(user_id)
+
+        # Assert
+        portfolio_repo.get.assert_called_once_with(user_id=user_id)
+        mock_get_stock_price.assert_not_called()
+        assert result == expected_result
+
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_stock_info_list_empty_portfolio(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio = Portfolio(
+            user_id=user_id,
+            cash_balance=0.0,
+            total_money_in=0.0,
+            holdings=[],
+            created_at=ANY,
+            updated_at=ANY,
+        )
+        portfolio_repo.get.return_value = portfolio
+        expected_result = {StockType.ETF.value: [], StockType.STOCKS.value: [], "CASH": []}
+
+        # Act
+        result = usecase.get_stock_info_list(user_id)
+
+        # Assert
+        portfolio_repo.get.assert_called_once_with(user_id=user_id)
+        mock_get_stock_price.assert_not_called()
+        assert result == expected_result
+
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_stock_info_list_no_valid_holdings(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio = Portfolio(
+            user_id=user_id,
+            cash_balance=1000.0,
+            total_money_in=2000.0,
+            holdings=[Holding(symbol="AAPL", shares=0, stock_type=StockType.STOCKS, total_cost=0.0)],
+            created_at=ANY,
+            updated_at=ANY,
+        )
+        portfolio_repo.get.return_value = portfolio
+        expected_result = {StockType.ETF.value: [], StockType.STOCKS.value: [], "CASH": []}
+
+        # Act
+        result = usecase.get_stock_info_list(user_id)
+
+        # Assert
+        portfolio_repo.get.assert_called_once_with(user_id=user_id)
+        mock_get_stock_price.assert_not_called()
+        assert result == expected_result
+
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_stock_info_list_with_valid_holdings(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio = Portfolio(
+            user_id=user_id,
+            cash_balance=1000.0,
+            total_money_in=2000.0,
+            holdings=[
+                Holding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_cost=1500.0),
+                Holding(symbol="TSLA", shares=20, stock_type=StockType.STOCKS, total_cost=2000.0),
+                Holding(symbol="SPY", shares=30, stock_type=StockType.ETF, total_cost=3000.0),
+                Holding(symbol="QQQ", shares=5, stock_type=StockType.ETF, total_cost=1000.0),
+            ],
+            created_at=ANY,
+            updated_at=ANY,
+        )
+
+        mock_get_stock_price.return_value = {"AAPL": 200.0, "TSLA": 500.0, "SPY": 400.0, "QQQ": 300.0}
+        portfolio_repo.get.return_value = portfolio
+        expected_result = {
+            StockType.ETF.value: [
+                StockInfo(
+                    symbol="SPY",
+                    quantity=30,
+                    price=400.0,
+                    avg_cost=100.0,  # 3000 / 30
+                    percentage=45.0,  # 12000 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                ),
+                StockInfo(
+                    symbol="QQQ",
+                    quantity=5,
+                    price=300.0,
+                    avg_cost=200.0,  # 1000 / 5
+                    percentage=6.0,  # 1500 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                ),
+            ],
+            StockType.STOCKS.value: [
+                StockInfo(
+                    symbol="AAPL",
+                    quantity=10,
+                    price=200.0,
+                    avg_cost=150.0,  # 1500 / 10
+                    percentage=8.0,  # 2000 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                ),
+                StockInfo(
+                    symbol="TSLA",
+                    quantity=20,
+                    price=500.0,
+                    avg_cost=100.0,  # 2000 / 20
+                    percentage=38.0,  # 10000 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                ),
+            ],
+            "CASH": [
+                StockInfo(
+                    symbol="CASH",
+                    quantity=1,
+                    price=1000.0,
+                    avg_cost=0.0,
+                    percentage=4.0,  # 1000 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                )
+            ],
+        }
+
+        # Act
+        result = usecase.get_stock_info_list(user_id)
+
+        # Assert
+        portfolio_repo.get.assert_called_once_with(user_id=user_id)
+        mock_get_stock_price.assert_called_once_with(
+            stock_info=[
+                ("AAPL", StockType.STOCKS),
+                ("TSLA", StockType.STOCKS),
+                ("SPY", StockType.ETF),
+                ("QQQ", StockType.ETF),
+            ]
+        )
         assert result == expected_result

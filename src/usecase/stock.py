@@ -4,7 +4,7 @@ import yfinance as yf
 from .base import AbstractStockUsecase
 from adapters.base import AbstractStockRepository, AbstractPortfolioRepository
 from domain.portfolio import Portfolio, Holding, PortfolioInfo
-from domain.stock import CreateStock, Stock
+from domain.stock import CreateStock, Stock, StockInfo
 from domain.enum import ActionType, StockType
 
 ETF_KEY = "navPrice"
@@ -104,6 +104,56 @@ class StockUsecase(AbstractStockUsecase):
             total_gain=total_value - portfolio.total_money_in,
             roi=roi,
         )
+
+    def get_stock_info_list(self, user_id: int) -> Dict[str, List[StockInfo]]:
+        result = {StockType.ETF.value: [], StockType.STOCKS.value: [], "CASH": []}
+        portfolio = self.portfolio_repo.get(user_id=user_id)
+        if portfolio is None or portfolio.total_money_in == 0.0:
+            return result
+
+        valid_holdings = [
+            (holding.symbol, holding.shares, holding.stock_type, holding.total_cost)
+            for holding in portfolio.holdings
+            if holding.shares > 0
+        ]
+        if not valid_holdings:
+            return result
+
+        # Fetch prices in batch
+        stock_info = [(symbol, stock_type) for symbol, _, stock_type, _ in valid_holdings]
+        stock_price_by_symbol = self._get_stock_price(stock_info=stock_info)
+
+        # Calculate total stock value and total value
+        total_stock_price = sum(
+            shares * stock_price_by_symbol.get(symbol, 0.0) for symbol, shares, _, _ in valid_holdings
+        )
+        total_value = total_stock_price + portfolio.cash_balance
+
+        for symbol, shares, stock_type, total_cost in valid_holdings:
+            stock_price = stock_price_by_symbol.get(symbol, 0.0)
+            stock_total_value = shares * stock_price
+
+            result[stock_type.value].append(
+                StockInfo(
+                    symbol=symbol,
+                    quantity=shares,
+                    price=stock_price,
+                    avg_cost=round(total_cost / shares, 2),
+                    percentage=round(stock_total_value / total_value, 2) * 100,
+                )
+            )
+
+        result["CASH"].append(
+            StockInfo(
+                symbol="CASH",
+                quantity=1,
+                price=portfolio.cash_balance,
+                avg_cost=0,
+                percentage=round(portfolio.cash_balance / total_value, 2) * 100,
+            )
+        )
+
+        return result
 
     def _get_stock_price(self, stock_info: List[Tuple[str, StockType]]) -> Dict[str, float]:
         if not stock_info:
