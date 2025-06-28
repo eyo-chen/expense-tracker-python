@@ -1,7 +1,6 @@
-from typing import List
+from typing import List, Dict
 from abc import ABC, abstractmethod
-
-from domain.stock import CreateStock, Stock
+from domain.stock import CreateStock, Stock, StockInfo
 from domain.portfolio import PortfolioInfo
 
 
@@ -15,3 +14,6 @@ class AbstractStockUsecase(ABC):
 
     def get_portfolio_info(self, user_id: int) -> PortfolioInfo:
         """Get portfolio info"""
+
+    def get_stock_info(self, user_id: int) -> Dict[str, List[StockInfo]]:
+        """Get stock info by user id"""
