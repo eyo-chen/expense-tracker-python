@@ -33,13 +33,21 @@ message Stock {
   google.protobuf.Timestamp updated_at = 9 [json_name = "updated_at"];
 }
 
+message StockInfo {
+  string symbol = 1 [json_name = "symbol"];
+  int32 quantity = 2 [json_name = "quantity"];
+  double price = 3 [json_name = "price"];
+  double avg_cost = 4 [json_name = "avg_cost"];
+  double percentage = 5 [json_name = "percentage"];
+}
+
 message CreateReq {
   int32 user_id = 1 [json_name = "user_id"];
   string symbol = 2 [json_name = "symbol"];
   double price = 3 [json_name = "price"];
   int32 quantity = 4 [json_name = "quantity"];
-  Action.Type action = 5 [json_name = "action"]; // add validation rules
-  StockType.Type stock_type = 6 [json_name = "stock_type"]; // add validation rules
+  Action.Type action = 5 [json_name = "action"];
+  StockType.Type stock_type = 6 [json_name = "stock_type"];
   google.protobuf.Timestamp created_at = 7 [json_name = "created_at"];
   google.protobuf.Timestamp updated_at = 8 [json_name = "updated_at"];
 }
@@ -67,9 +75,19 @@ message GetPortfolioInfoResp {
   double roi = 4 [json_name = "roi"];
 }
 
+message GetStockInfoReq {
+  int32 user_id = 1 [json_name = "user_id"];
+}
+
+message GetStockInfoResp {
+  repeated StockInfo stocks = 1 [json_name = "STOCKS"];
+  repeated StockInfo etf = 2 [json_name = "ETF"];
+  repeated StockInfo cash = 3 [json_name = "CASH"];
+}
 
 service StockService {
   rpc Create (CreateReq) returns (CreateResp) {}
   rpc List (ListReq) returns (ListResp) {}
   rpc GetPortfolioInfo (GetPortfolioInfoReq) returns (GetPortfolioInfoResp) {}
+  rpc GetStockInfo (GetStockInfoReq) returns (GetStockInfoResp) {}
 }

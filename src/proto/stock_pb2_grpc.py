@@ -49,6 +49,11 @@ class StockServiceStub(object):
                 request_serializer=proto_dot_stock__pb2.GetPortfolioInfoReq.SerializeToString,
                 response_deserializer=proto_dot_stock__pb2.GetPortfolioInfoResp.FromString,
                 _registered_method=True)
+        self.GetStockInfo = channel.unary_unary(
+                '/stock.StockService/GetStockInfo',
+                request_serializer=proto_dot_stock__pb2.GetStockInfoReq.SerializeToString,
+                response_deserializer=proto_dot_stock__pb2.GetStockInfoResp.FromString,
+                _registered_method=True)
 
 
 class StockServiceServicer(object):
@@ -72,6 +77,12 @@ class StockServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetStockInfo(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_StockServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -89,6 +100,11 @@ def add_StockServiceServicer_to_server(servicer, server):
                     servicer.GetPortfolioInfo,
                     request_deserializer=proto_dot_stock__pb2.GetPortfolioInfoReq.FromString,
                     response_serializer=proto_dot_stock__pb2.GetPortfolioInfoResp.SerializeToString,
+            ),
+            'GetStockInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetStockInfo,
+                    request_deserializer=proto_dot_stock__pb2.GetStockInfoReq.FromString,
+                    response_serializer=proto_dot_stock__pb2.GetStockInfoResp.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -172,6 +188,33 @@ class StockService(object):
             '/stock.StockService/GetPortfolioInfo',
             proto_dot_stock__pb2.GetPortfolioInfoReq.SerializeToString,
             proto_dot_stock__pb2.GetPortfolioInfoResp.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetStockInfo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/stock.StockService/GetStockInfo',
+            proto_dot_stock__pb2.GetStockInfoReq.SerializeToString,
+            proto_dot_stock__pb2.GetStockInfoResp.FromString,
             options,
             channel_credentials,
             insecure,
