@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from unittest.mock import Mock
 from handler.stock import StockService
 from usecase.base import AbstractStockUsecase
-from domain.stock import CreateStock, Stock
+from domain.stock import CreateStock, Stock, StockInfo
 from domain.portfolio import PortfolioInfo
 from domain.enum import ActionType, StockType
 
@@ -318,3 +318,126 @@ class TestStockServiceGetPortfolioInfo:
         mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
         mock_context.set_details.assert_called_once_with("Internal server error")
         mock_stock_usecase.get_portfolio_info.assert_called_once_with(user_id=1)
+
+
+class TestStockServiceGetStockInfo:
+    # Fixture to create a mock stock_usecase
+    @pytest.fixture
+    def mock_stock_usecase(self):
+        usecase = Mock(spec=AbstractStockUsecase)
+        usecase.get_stock_info.return_value = {
+            StockType.STOCKS.value: [
+                StockInfo(
+                    symbol="AAPL",
+                    quantity=10,
+                    price=100.0,
+                    avg_cost=95.0,
+                    percentage=5.26,
+                ),
+                StockInfo(
+                    symbol="GOOGL",
+                    quantity=5,
+                    price=1500.0,
+                    avg_cost=1400.0,
+                    percentage=7.14,
+                ),
+            ],
+            StockType.ETF.value: [
+                StockInfo(
+                    symbol="SPY",
+                    quantity=20,
+                    price=400.0,
+                    avg_cost=390.0,
+                    percentage=2.56,
+                ),
+            ],
+            "CASH": [
+                StockInfo(
+                    symbol="USD",
+                    quantity=1,
+                    price=1000.0,
+                    avg_cost=1.0,
+                    percentage=0.0,
+                ),
+            ],
+        }
+        return usecase
+
+    # Fixture to create a mock gRPC context
+    @pytest.fixture
+    def mock_context(self):
+        context = Mock()
+        context.set_code = Mock()
+        context.set_details = Mock()
+        return context
+
+    # Fixture to create a valid gRPC request
+    @pytest.fixture
+    def valid_request(self):
+        request = Mock()
+        request.user_id = 1
+        return request
+
+    def test_success(self, mock_stock_usecase, mock_context, valid_request):
+        # Arrange
+        service = StockService(mock_stock_usecase)
+
+        expected_result = stock_pb2.GetStockInfoResp(
+            stocks=[
+                stock_pb2.StockInfo(
+                    symbol="AAPL",
+                    quantity=10,
+                    price=100.0,
+                    avg_cost=95.0,
+                    percentage=5.26,
+                ),
+                stock_pb2.StockInfo(
+                    symbol="GOOGL",
+                    quantity=5,
+                    price=1500.0,
+                    avg_cost=1400.0,
+                    percentage=7.14,
+                ),
+            ],
+            etf=[
+                stock_pb2.StockInfo(
+                    symbol="SPY",
+                    quantity=20,
+                    price=400.0,
+                    avg_cost=390.0,
+                    percentage=2.56,
+                ),
+            ],
+            cash=[
+                stock_pb2.StockInfo(
+                    symbol="USD",
+                    quantity=1,
+                    price=1000.0,
+                    avg_cost=1.0,
+                    percentage=0.0,
+                ),
+            ],
+        )
+
+        # Action
+        response = service.GetStockInfo(valid_request, mock_context)
+
+        # Assertion
+        assert isinstance(response, stock_pb2.GetStockInfoResp)
+        assert response == expected_result
+        mock_stock_usecase.get_stock_info.assert_called_once_with(user_id=1)
+        mock_context.set_code.assert_not_called()
+        mock_context.set_details.assert_not_called()
+
+    def test_internal_error(self, mock_stock_usecase, mock_context, valid_request):
+        # Arrange
+        service = StockService(mock_stock_usecase)
+        mock_stock_usecase.get_stock_info.side_effect = Exception("Database error")  # Simulate internal error
+
+        # Act/Assertion
+        with pytest.raises(grpc.RpcError) as exc_info:
+            service.GetStockInfo(valid_request, mock_context)
+        assert str(exc_info.value) == "Internal server error"
+        mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
+        mock_context.set_details.assert_called_once_with("Internal server error")
+        mock_stock_usecase.get_stock_info.assert_called_once_with(user_id=1)
