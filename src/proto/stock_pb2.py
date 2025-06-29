@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11proto/stock.proto\x12\x05stock\x1a\x1fgoogle/protobuf/timestamp.proto\"B\n\x06\x41\x63tion\"8\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x07\n\x03\x42UY\x10\x01\x12\x08\n\x04SELL\x10\x02\x12\x0c\n\x08TRANSFER\x10\x03\"9\n\tStockType\",\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\n\n\x06STOCKS\x10\x01\x12\x07\n\x03\x45TF\x10\x02\"\xab\x02\n\x05Stock\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07user_id\x18\x02 \x01(\x05R\x07user_id\x12\x16\n\x06symbol\x18\x03 \x01(\tR\x06symbol\x12\x14\n\x05price\x18\x04 \x01(\x01R\x05price\x12\x1a\n\x08quantity\x18\x05 \x01(\x05R\x08quantity\x12\x16\n\x06\x61\x63tion\x18\x06 \x01(\tR\x06\x61\x63tion\x12\x1e\n\nstock_type\x18\x07 \x01(\tR\nstock_type\x12:\n\ncreated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreated_at\x12:\n\nupdated_at\x18\t \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdated_at\"\x91\x01\n\tStockInfo\x12\x16\n\x06symbol\x18\x01 \x01(\tR\x06symbol\x12\x1a\n\x08quantity\x18\x02 \x01(\x05R\x08quantity\x12\x14\n\x05price\x18\x03 \x01(\x01R\x05price\x12\x1a\n\x08\x61vg_cost\x18\x04 \x01(\x01R\x08\x61vg_cost\x12\x1e\n\npercentage\x18\x05 \x01(\x01R\npercentage\"\xca\x02\n\tCreateReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12\x16\n\x06symbol\x18\x02 \x01(\tR\x06symbol\x12\x14\n\x05price\x18\x03 \x01(\x01R\x05price\x12\x1a\n\x08quantity\x18\x04 \x01(\x05R\x08quantity\x12*\n\x06\x61\x63tion\x18\x05 \x01(\x0e\x32\x12.stock.Action.TypeR\x06\x61\x63tion\x12\x35\n\nstock_type\x18\x06 \x01(\x0e\x32\x15.stock.StockType.TypeR\nstock_type\x12:\n\ncreated_at\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreated_at\x12:\n\nupdated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdated_at\"\x1c\n\nCreateResp\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"#\n\x07ListReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\"8\n\x08ListResp\x12,\n\nstock_list\x18\x01 \x03(\x0b\x32\x0c.stock.StockR\nstock_list\"/\n\x13GetPortfolioInfoReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\"\x98\x01\n\x14GetPortfolioInfoResp\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12\x34\n\x15total_portfolio_value\x18\x02 \x01(\x01R\x15total_portfolio_value\x12\x1e\n\ntotal_gain\x18\x03 \x01(\x01R\ntotal_gain\x12\x10\n\x03roi\x18\x04 \x01(\x01R\x03roi\"+\n\x0fGetStockInfoReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\"\x86\x01\n\x10GetStockInfoResp\x12(\n\x06stocks\x18\x01 \x03(\x0b\x32\x10.stock.StockInfoR\x06STOCKS\x12\"\n\x03\x65tf\x18\x02 \x03(\x0b\x32\x10.stock.StockInfoR\x03\x45TF\x12$\n\x04\x63\x61sh\x18\x03 \x03(\x0b\x32\x10.stock.StockInfoR\x04\x43\x41SH2\xfc\x01\n\x0cStockService\x12/\n\x06\x43reate\x12\x10.stock.CreateReq\x1a\x11.stock.CreateResp\"\x00\x12)\n\x04List\x12\x0e.stock.ListReq\x1a\x0f.stock.ListResp\"\x00\x12M\n\x10GetPortfolioInfo\x12\x1a.stock.GetPortfolioInfoReq\x1a\x1b.stock.GetPortfolioInfoResp\"\x00\x12\x41\n\x0cGetStockInfo\x12\x16.stock.GetStockInfoReq\x1a\x17.stock.GetStockInfoResp\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11proto/stock.proto\x12\x05stock\x1a\x1fgoogle/protobuf/timestamp.proto\"B\n\x06\x41\x63tion\"8\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x07\n\x03\x42UY\x10\x01\x12\x08\n\x04SELL\x10\x02\x12\x0c\n\x08TRANSFER\x10\x03\"9\n\tStockType\",\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\n\n\x06STOCKS\x10\x01\x12\x07\n\x03\x45TF\x10\x02\"\xdb\x02\n\x05Stock\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07user_id\x18\x02 \x01(\x05R\x07user_id\x12\x16\n\x06symbol\x18\x03 \x01(\tR\x06symbol\x12\x14\n\x05price\x18\x04 \x01(\x01R\x05price\x12\x1a\n\x08quantity\x18\x05 \x01(\x05R\x08quantity\x12\x16\n\x06\x61\x63tion\x18\x06 \x01(\tR\x06\x61\x63tion\x12\x1e\n\nstock_type\x18\x07 \x01(\tR\nstock_type\x12.\n\x04\x64\x61te\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x04\x64\x61te\x12:\n\ncreated_at\x18\t \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreated_at\x12:\n\nupdated_at\x18\n \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdated_at\"\x91\x01\n\tStockInfo\x12\x16\n\x06symbol\x18\x01 \x01(\tR\x06symbol\x12\x1a\n\x08quantity\x18\x02 \x01(\x05R\x08quantity\x12\x14\n\x05price\x18\x03 \x01(\x01R\x05price\x12\x1a\n\x08\x61vg_cost\x18\x04 \x01(\x01R\x08\x61vg_cost\x12\x1e\n\npercentage\x18\x05 \x01(\x01R\npercentage\"\xfa\x02\n\tCreateReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12\x16\n\x06symbol\x18\x02 \x01(\tR\x06symbol\x12\x14\n\x05price\x18\x03 \x01(\x01R\x05price\x12\x1a\n\x08quantity\x18\x04 \x01(\x05R\x08quantity\x12*\n\x06\x61\x63tion\x18\x05 \x01(\x0e\x32\x12.stock.Action.TypeR\x06\x61\x63tion\x12\x35\n\nstock_type\x18\x06 \x01(\x0e\x32\x15.stock.StockType.TypeR\nstock_type\x12.\n\x04\x64\x61te\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x04\x64\x61te\x12:\n\ncreated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreated_at\x12:\n\nupdated_at\x18\t \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdated_at\"\x1c\n\nCreateResp\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"#\n\x07ListReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\"8\n\x08ListResp\x12,\n\nstock_list\x18\x01 \x03(\x0b\x32\x0c.stock.StockR\nstock_list\"/\n\x13GetPortfolioInfoReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\"\x98\x01\n\x14GetPortfolioInfoResp\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12\x34\n\x15total_portfolio_value\x18\x02 \x01(\x01R\x15total_portfolio_value\x12\x1e\n\ntotal_gain\x18\x03 \x01(\x01R\ntotal_gain\x12\x10\n\x03roi\x18\x04 \x01(\x01R\x03roi\"+\n\x0fGetStockInfoReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\"\x86\x01\n\x10GetStockInfoResp\x12(\n\x06stocks\x18\x01 \x03(\x0b\x32\x10.stock.StockInfoR\x06STOCKS\x12\"\n\x03\x65tf\x18\x02 \x03(\x0b\x32\x10.stock.StockInfoR\x03\x45TF\x12$\n\x04\x63\x61sh\x18\x03 \x03(\x0b\x32\x10.stock.StockInfoR\x04\x43\x41SH2\xfc\x01\n\x0cStockService\x12/\n\x06\x43reate\x12\x10.stock.CreateReq\x1a\x11.stock.CreateResp\"\x00\x12)\n\x04List\x12\x0e.stock.ListReq\x1a\x0f.stock.ListResp\"\x00\x12M\n\x10GetPortfolioInfo\x12\x1a.stock.GetPortfolioInfoReq\x1a\x1b.stock.GetPortfolioInfoResp\"\x00\x12\x41\n\x0cGetStockInfo\x12\x16.stock.GetStockInfoReq\x1a\x17.stock.GetStockInfoResp\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -41,25 +41,25 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_STOCKTYPE_TYPE']._serialized_start=142
   _globals['_STOCKTYPE_TYPE']._serialized_end=186
   _globals['_STOCK']._serialized_start=189
-  _globals['_STOCK']._serialized_end=488
-  _globals['_STOCKINFO']._serialized_start=491
-  _globals['_STOCKINFO']._serialized_end=636
-  _globals['_CREATEREQ']._serialized_start=639
-  _globals['_CREATEREQ']._serialized_end=969
-  _globals['_CREATERESP']._serialized_start=971
-  _globals['_CREATERESP']._serialized_end=999
-  _globals['_LISTREQ']._serialized_start=1001
-  _globals['_LISTREQ']._serialized_end=1036
-  _globals['_LISTRESP']._serialized_start=1038
-  _globals['_LISTRESP']._serialized_end=1094
-  _globals['_GETPORTFOLIOINFOREQ']._serialized_start=1096
-  _globals['_GETPORTFOLIOINFOREQ']._serialized_end=1143
-  _globals['_GETPORTFOLIOINFORESP']._serialized_start=1146
-  _globals['_GETPORTFOLIOINFORESP']._serialized_end=1298
-  _globals['_GETSTOCKINFOREQ']._serialized_start=1300
-  _globals['_GETSTOCKINFOREQ']._serialized_end=1343
-  _globals['_GETSTOCKINFORESP']._serialized_start=1346
-  _globals['_GETSTOCKINFORESP']._serialized_end=1480
-  _globals['_STOCKSERVICE']._serialized_start=1483
-  _globals['_STOCKSERVICE']._serialized_end=1735
+  _globals['_STOCK']._serialized_end=536
+  _globals['_STOCKINFO']._serialized_start=539
+  _globals['_STOCKINFO']._serialized_end=684
+  _globals['_CREATEREQ']._serialized_start=687
+  _globals['_CREATEREQ']._serialized_end=1065
+  _globals['_CREATERESP']._serialized_start=1067
+  _globals['_CREATERESP']._serialized_end=1095
+  _globals['_LISTREQ']._serialized_start=1097
+  _globals['_LISTREQ']._serialized_end=1132
+  _globals['_LISTRESP']._serialized_start=1134
+  _globals['_LISTRESP']._serialized_end=1190
+  _globals['_GETPORTFOLIOINFOREQ']._serialized_start=1192
+  _globals['_GETPORTFOLIOINFOREQ']._serialized_end=1239
+  _globals['_GETPORTFOLIOINFORESP']._serialized_start=1242
+  _globals['_GETPORTFOLIOINFORESP']._serialized_end=1394
+  _globals['_GETSTOCKINFOREQ']._serialized_start=1396
+  _globals['_GETSTOCKINFOREQ']._serialized_end=1439
+  _globals['_GETSTOCKINFORESP']._serialized_start=1442
+  _globals['_GETSTOCKINFORESP']._serialized_end=1576
+  _globals['_STOCKSERVICE']._serialized_start=1579
+  _globals['_STOCKSERVICE']._serialized_end=1831
 # @@protoc_insertion_point(module_scope)

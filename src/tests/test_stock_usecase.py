@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from unittest.mock import Mock, ANY, patch
 from usecase.stock import StockUsecase
 from domain.stock import CreateStock, Stock, StockInfo
@@ -26,6 +27,7 @@ class TestStockUsecaseCreate:
             quantity=1,
             action_type=ActionType.TRANSFER,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         portfolio_repo.get.return_value = None
@@ -59,6 +61,7 @@ class TestStockUsecaseCreate:
             quantity=1,
             action_type=ActionType.TRANSFER,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -100,6 +103,7 @@ class TestStockUsecaseCreate:
             quantity=2,
             action_type=ActionType.BUY,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -141,6 +145,7 @@ class TestStockUsecaseCreate:
             quantity=3,
             action_type=ActionType.BUY,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -184,6 +189,7 @@ class TestStockUsecaseCreate:
             quantity=2,
             action_type=ActionType.SELL,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -227,6 +233,7 @@ class TestStockUsecaseCreate:
             quantity=5,
             action_type=ActionType.SELL,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -268,6 +275,7 @@ class TestStockUsecaseCreate:
             quantity=5,
             action_type=ActionType.SELL,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -299,6 +307,7 @@ class TestStockUsecaseCreate:
             quantity=10,
             action_type=ActionType.BUY,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         portfolio_repo.get.side_effect = Exception("Portfolio repository error")
@@ -322,6 +331,7 @@ class TestStockUsecaseCreate:
             quantity=10,
             action_type=ActionType.BUY,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -354,6 +364,7 @@ class TestStockUsecaseCreate:
             quantity=10,
             action_type=ActionType.BUY,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=ANY,
         )
         existing_portfolio = Portfolio(
@@ -389,6 +400,7 @@ class TestStockUsecaseList:
                 quantity=100,
                 action_type=ActionType.BUY,
                 stock_type=StockType.STOCKS,
+                date=datetime(2025, 6, 29),
                 created_at=ANY,
                 updated_at=ANY,
             ),
@@ -400,6 +412,7 @@ class TestStockUsecaseList:
                 quantity=10,
                 action_type=ActionType.BUY,
                 stock_type=StockType.STOCKS,
+                date=datetime(2025, 6, 29),
                 created_at=ANY,
                 updated_at=ANY,
             ),

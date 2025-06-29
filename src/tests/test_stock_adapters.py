@@ -35,6 +35,7 @@ class TestStockRepository:
             quantity=100,
             action_type=ActionType.BUY,
             stock_type=StockType.STOCKS,
+            date=datetime(2025, 6, 29),
             created_at=datetime.now(timezone.utc),
         )
 
@@ -45,6 +46,7 @@ class TestStockRepository:
             "quantity": mock_stock.quantity,
             "action_type": mock_stock.action_type.value,
             "stock_type": mock_stock.stock_type.value,
+            "date": mock_stock.date,
         }
 
         stock_id = stock_repository.create(mock_stock)
@@ -68,6 +70,7 @@ class TestStockRepository:
             action_type=ActionType.BUY,
             stock_type=StockType.STOCKS,
             created_at=created_at,
+            date=datetime(2025, 6, 29),
         )
         mock_stock2 = CreateStock(
             user_id=1,
@@ -77,6 +80,7 @@ class TestStockRepository:
             action_type=ActionType.SELL,
             stock_type=StockType.STOCKS,
             created_at=created_at,
+            date=datetime(2025, 6, 29),
         )
 
         # Define expected results
@@ -87,6 +91,7 @@ class TestStockRepository:
             "quantity": mock_stock1.quantity,
             "action_type": mock_stock1.action_type.value,
             "stock_type": mock_stock1.stock_type.value,
+            "date": mock_stock1.date,
         }
         expected_result2 = {
             "user_id": mock_stock2.user_id,
@@ -95,6 +100,7 @@ class TestStockRepository:
             "quantity": mock_stock2.quantity,
             "action_type": mock_stock2.action_type.value,
             "stock_type": mock_stock2.stock_type.value,
+            "date": mock_stock2.date,
         }
         expected_data = [expected_result1, expected_result2]
 
@@ -129,6 +135,7 @@ class TestStockRepository:
             "quantity": 100,
             "action_type": ActionType.BUY.value,
             "stock_type": StockType.STOCKS.value,
+            "date": datetime(2025, 6, 29),
             "created_at": created_at,
             "updated_at": created_at,
         }
@@ -139,6 +146,7 @@ class TestStockRepository:
             "quantity": 50,
             "action_type": ActionType.SELL.value,
             "stock_type": StockType.STOCKS.value,
+            "date": datetime(2025, 6, 29),
             "created_at": created_at,
             "updated_at": created_at,
         }
@@ -149,6 +157,7 @@ class TestStockRepository:
             "quantity": 10,
             "action_type": ActionType.BUY.value,
             "stock_type": StockType.STOCKS.value,
+            "date": datetime(2025, 6, 29),
             "created_at": created_at,
             "updated_at": created_at,
         }
@@ -172,6 +181,7 @@ class TestStockRepository:
                 quantity=mock_stock1["quantity"],
                 action_type=ActionType(mock_stock1["action_type"]),
                 stock_type=StockType(mock_stock1["stock_type"]),
+                date=datetime(2025, 6, 29),
                 created_at=mock_stock1["created_at"],
                 updated_at=mock_stock1["updated_at"],
             ),
@@ -183,6 +193,7 @@ class TestStockRepository:
                 quantity=mock_stock2["quantity"],
                 action_type=ActionType(mock_stock2["action_type"]),
                 stock_type=StockType(mock_stock2["stock_type"]),
+                date=datetime(2025, 6, 29),
                 created_at=mock_stock2["created_at"],
                 updated_at=mock_stock2["updated_at"],
             ),
@@ -233,6 +244,7 @@ class TestStockRepository:
             "quantity": 100,
             "action_type": ActionType.BUY.value,
             "stock_type": StockType.STOCKS.value,
+            "date": datetime(2025, 6, 29),
             "created_at": created_at,
             "updated_at": created_at,
         }
@@ -243,6 +255,7 @@ class TestStockRepository:
             "quantity": 50,
             "action_type": ActionType.SELL.value,
             "stock_type": StockType.STOCKS.value,
+            "date": datetime(2025, 6, 29),
             "created_at": created_at,
             "updated_at": created_at,
         }

@@ -187,6 +187,7 @@ class TestStockServiceList:
                 quantity=10,
                 action_type=ActionType.BUY,
                 stock_type=StockType.STOCKS,
+                date=datetime(2025, 6, 29),
                 created_at=datetime(2023, 1, 1, tzinfo=timezone.utc),
                 updated_at=datetime(2023, 1, 1, tzinfo=timezone.utc),  # Include if required
             ),
@@ -198,6 +199,7 @@ class TestStockServiceList:
                 quantity=5,
                 action_type=ActionType.SELL,
                 stock_type=StockType.STOCKS,
+                date=datetime(2025, 6, 29),
                 created_at=datetime(2023, 1, 2, tzinfo=timezone.utc),
                 updated_at=datetime(2023, 1, 2, tzinfo=timezone.utc),  # Include if required
             ),

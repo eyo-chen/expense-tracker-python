@@ -30,6 +30,7 @@ class StockRepository(AbstractStockRepository):
                 quantity=doc["quantity"],
                 action_type=ActionType(doc["action_type"]),
                 stock_type=StockType(doc["stock_type"]),
+                date=doc["date"],
                 created_at=doc["created_at"],
                 updated_at=doc["updated_at"],
             )

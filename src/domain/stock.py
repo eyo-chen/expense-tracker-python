@@ -44,6 +44,7 @@ class CreateStock:
     quantity: int
     action_type: ActionType
     stock_type: StockType
+    date: datetime
     created_at: datetime
 
     def __post_init__(self):
@@ -69,6 +70,7 @@ class Stock:
     quantity: int
     action_type: ActionType
     stock_type: StockType
+    date: datetime
     created_at: datetime
     updated_at: datetime
 

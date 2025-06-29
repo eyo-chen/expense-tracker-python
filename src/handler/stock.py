@@ -22,6 +22,7 @@ class StockService(stock_pb2_grpc.StockService):
                 quantity=request.quantity,
                 action_type=self._map_action_type(request.action),
                 stock_type=self._map_stock_type(request.stock_type),
+                date=request.date.ToDatetime() if request.date else datetime.now(timezone.utc),
                 created_at=datetime.now(timezone.utc),
             )
 
