@@ -23,3 +23,9 @@ class AbstractPortfolioRepository(ABC):
     @abstractmethod
     def get(self, user_id: int) -> Portfolio:
         """Get Portfolio"""
+
+
+class AbstractHistoricalPortfolioRepository(ABC):
+    @abstractmethod
+    def update(self, portfolio: Portfolio) -> None:
+        """Update or insert historical portfolio in the repository"""
