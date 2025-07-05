@@ -5,6 +5,7 @@ from dataclasses import asdict
 from utils.utils import custom_dict_factory
 from domain.enum import StockType
 
+
 class HistoricalHoldingDict(TypedDict):
     symbol: str
     shares: int
@@ -51,7 +52,7 @@ class HistoricalPortfolio:
     date: datetime
     portfolio_value: float
     cash_balance: float
-    cash_in: float
+    money_in: float
     holdings_value: float
     holdings_value_breakdown: List[HistoricalHolding]
     gain: float
@@ -63,5 +64,3 @@ class HistoricalPortfolio:
         dict = asdict(self, dict_factory=custom_dict_factory)
         dict["date"] = self.date.strftime("%Y-%m-%d")
         return dict
-
-

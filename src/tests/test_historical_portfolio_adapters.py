@@ -34,9 +34,11 @@ class TestHistoricalPortfolioRepository:
             date=date,
             portfolio_value=1000.0,
             cash_balance=1000.0,
-            cash_in=1000.0,
+            money_in=1000.0,
             holdings_value=1000.0,
-            holdings_value_breakdown=[HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1500.0)],
+            holdings_value_breakdown=[
+                HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1500.0)
+            ],
             gain=0.0,
             roi=0.0,
             created_at=created_at,
@@ -52,7 +54,7 @@ class TestHistoricalPortfolioRepository:
         assert result["date"] == historical_portfolio.date.strftime("%Y-%m-%d")
         assert result["portfolio_value"] == historical_portfolio.portfolio_value
         assert result["cash_balance"] == historical_portfolio.cash_balance
-        assert result["cash_in"] == historical_portfolio.cash_in
+        assert result["money_in"] == historical_portfolio.money_in
         assert result["holdings_value"] == historical_portfolio.holdings_value
         assert len(result["holdings_value_breakdown"]) == 1
         assert result["holdings_value_breakdown"][0]["symbol"] == "AAPL"
@@ -69,9 +71,11 @@ class TestHistoricalPortfolioRepository:
             date=date,
             portfolio_value=1000.0,
             cash_balance=1000.0,
-            cash_in=1000.0,
+            money_in=1000.0,
             holdings_value=1000.0,
-            holdings_value_breakdown=[HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1500.0)],
+            holdings_value_breakdown=[
+                HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1500.0)
+            ],
             gain=0.0,
             roi=0.0,
             created_at=created_at,
@@ -83,7 +87,9 @@ class TestHistoricalPortfolioRepository:
         updated_cash_balance = 2000.0
         updated_cash_in = 2000.0
         updated_holdings_value = 2000.0
-        updated_holdings_value_breakdown = [HistoricalHolding(symbol="AAPL", shares=20, stock_type=StockType.STOCKS, total_value=3000.0)]
+        updated_holdings_value_breakdown = [
+            HistoricalHolding(symbol="AAPL", shares=20, stock_type=StockType.STOCKS, total_value=3000.0)
+        ]
         updated_gain = 1000.0
         updated_roi = 0.5
         updated_historical_portfolio = HistoricalPortfolio(
@@ -91,7 +97,7 @@ class TestHistoricalPortfolioRepository:
             date=date,
             portfolio_value=updated_portfolio_value,
             cash_balance=updated_cash_balance,
-            cash_in=updated_cash_in,
+            money_in=updated_cash_in,
             holdings_value=updated_holdings_value,
             holdings_value_breakdown=updated_holdings_value_breakdown,
             gain=updated_gain,
@@ -110,12 +116,10 @@ class TestHistoricalPortfolioRepository:
         assert result["date"] == updated_historical_portfolio.date.strftime("%Y-%m-%d")
         assert result["portfolio_value"] == updated_historical_portfolio.portfolio_value
         assert result["cash_balance"] == updated_historical_portfolio.cash_balance
-        assert result["cash_in"] == updated_historical_portfolio.cash_in
+        assert result["money_in"] == updated_historical_portfolio.money_in
         assert result["holdings_value"] == updated_historical_portfolio.holdings_value
         assert len(result["holdings_value_breakdown"]) == 1
         assert result["holdings_value_breakdown"][0]["symbol"] == "AAPL"
         assert result["holdings_value_breakdown"][0]["shares"] == 20
         assert result["holdings_value_breakdown"][0]["stock_type"] == StockType.STOCKS.value
         assert result["holdings_value_breakdown"][0]["total_value"] == 3000.0
-
-
