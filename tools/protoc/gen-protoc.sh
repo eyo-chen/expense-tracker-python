@@ -9,3 +9,8 @@ python -m grpc_tools.protoc -Iproto=src/proto \
     --python_out=src/ \
     --grpc_python_out=src/ \
     src/proto/stock.proto
+
+python -m grpc_tools.protoc -Iproto=src/proto \
+    --python_out=src/ \
+    --grpc_python_out=src/ \
+    src/proto/historical_portfolio.proto
