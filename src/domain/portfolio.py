@@ -29,8 +29,6 @@ class Holding:
     total_cost: float
 
     def __post_init__(self):
-        if not self.symbol:
-            raise ValueError("symbol cannot be empty")
         if self.shares < 0:
             raise ValueError("shares cannot be negative")
         if self.total_cost < 0:

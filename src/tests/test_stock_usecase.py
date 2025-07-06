@@ -290,7 +290,7 @@ class TestStockUsecaseCreate:
         stock_repo.create.return_value = stock_id
 
         # Act/Assert
-        with pytest.raises(Exception, match="Can not sell non-exist stock"):
+        with pytest.raises(Exception, match="Can not sell non-existent stock"):
             usecase.create(stock)
         portfolio_repo.get.assert_called_once_with(user_id)
         portfolio_repo.update.assert_not_called()
@@ -767,15 +767,15 @@ class TestStockUsecaseGetStockInfo:
                     symbol="SPY",
                     quantity=30,
                     price=400.0,
-                    avg_cost=100.0,  # 3000 / 30
-                    percentage=45.0,  # 12000 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                    avg_cost=100.00,  # 3000 / 30
+                    percentage=round(12000 / (1000 + 10 * 200 + 20 * 500 + 30 * 400 + 5 * 300), 4) * 100,
                 ),
                 StockInfo(
                     symbol="QQQ",
                     quantity=5,
                     price=300.0,
-                    avg_cost=200.0,  # 1000 / 5
-                    percentage=6.0,  # 1500 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                    avg_cost=200.00,  # 1000 / 5
+                    percentage=round(1500 / (1000 + 10 * 200 + 20 * 500 + 30 * 400 + 5 * 300), 4) * 100,
                 ),
             ],
             StockType.STOCKS.value: [
@@ -783,15 +783,15 @@ class TestStockUsecaseGetStockInfo:
                     symbol="AAPL",
                     quantity=10,
                     price=200.0,
-                    avg_cost=150.0,  # 1500 / 10
-                    percentage=8.0,  # 2000 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                    avg_cost=150.00,  # 1500 / 10
+                    percentage=round(2000 / (1000 + 10 * 200 + 20 * 500 + 30 * 400 + 5 * 300), 4) * 100,
                 ),
                 StockInfo(
                     symbol="TSLA",
                     quantity=20,
                     price=500.0,
-                    avg_cost=100.0,  # 2000 / 20
-                    percentage=38.0,  # 10000 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                    avg_cost=100.00,  # 2000 / 20
+                    percentage=round(10000 / (1000 + 10 * 200 + 20 * 500 + 30 * 400 + 5 * 300), 4) * 100,
                 ),
             ],
             "CASH": [
@@ -800,7 +800,7 @@ class TestStockUsecaseGetStockInfo:
                     quantity=1,
                     price=1000.0,
                     avg_cost=0.0,
-                    percentage=4.0,  # 1000 / (1000 + 10*200 + 20*500 + 30*400 + 5*300)
+                    percentage=round(1000 / (1000 + 10 * 200 + 20 * 500 + 30 * 400 + 5 * 300), 4) * 100,
                 )
             ],
         }

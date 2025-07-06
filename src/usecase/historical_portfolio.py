@@ -18,6 +18,7 @@ class HistoricalPortfolioUsecase(AbstractHistoricalPortfolioUsecase):
     ):
         self.historical_portfolio_repo = historical_portfolio_repo
         self.portfolio_repo = portfolio_repo
+        self._stock_price_cache: Dict[str, float] = {}
 
     def create(self, user_id: int, date: datetime):
         start_date_of_month = date.replace(day=1)
@@ -35,7 +36,7 @@ class HistoricalPortfolioUsecase(AbstractHistoricalPortfolioUsecase):
         stock_info = [(symbol, stock_type) for symbol, _, stock_type in valid_holdings]
         stock_price_by_symbol = self._get_stock_price(stock_info=stock_info)
 
-        # Calculate total stock value
+        # Calculate total stock value and holdings breakdown
         total_stock_price = 0.0
         holdings_value_breakdown = []
         for symbol, shares, stock_type in valid_holdings:
@@ -53,9 +54,9 @@ class HistoricalPortfolioUsecase(AbstractHistoricalPortfolioUsecase):
 
         # Compute ROI
         total_value = total_stock_price + portfolio.cash_balance
-        roi = round(((total_value - portfolio.total_money_in) / portfolio.total_money_in) * 100, 2)
+        roi = round(((total_value - portfolio.total_money_in) / portfolio.total_money_in), 4) * 100
 
-        current_datetime = (datetime.now(timezone.utc),)
+        current_datetime = datetime.now(timezone.utc)
         historical_portfolio = HistoricalPortfolio(
             user_id=user_id,
             date=start_date_of_month,
@@ -75,21 +76,31 @@ class HistoricalPortfolioUsecase(AbstractHistoricalPortfolioUsecase):
         if not stock_info:
             return {}
 
+        # Fetch only symbols not in cache
+        symbols = [symbol for symbol, _ in stock_info if symbol not in self._stock_price_cache]
+        if not symbols:
+            return self._stock_price_cache
+
         try:
-            symbols = [symbol for symbol, _ in stock_info]
             tickers = yf.Tickers(symbols)
-            stock_price_by_symbol = {}
+            new_prices = {}
 
             for symbol, stock_type in stock_info:
+                if symbol in self._stock_price_cache:
+                    new_prices[symbol] = self._stock_price_cache[symbol]
+                    continue
+
                 ticker = tickers.tickers.get(symbol.upper())
                 if ticker is None:
-                    stock_price_by_symbol[symbol] = 0.0
+                    new_prices[symbol] = 0.0
                     continue
 
                 price_field = STOCK_KEY if stock_type == StockType.STOCKS else ETF_KEY
-                stock_price_by_symbol[symbol] = ticker.info.get(price_field, 0.0)
+                new_prices[symbol] = ticker.info.get(price_field, 0.0)
 
-            return stock_price_by_symbol
+            # Update the cache with new prices
+            self._stock_price_cache.update(new_prices)
+            return self._stock_price_cache
         except Exception as e:
             print(f"Error fetching prices for symbols {[symbol for symbol, _ in stock_info]}: {e}")
             return {symbol: 0.0 for symbol, _ in stock_info}

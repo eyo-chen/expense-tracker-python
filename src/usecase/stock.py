@@ -15,6 +15,7 @@ class StockUsecase(AbstractStockUsecase):
     def __init__(self, stock_repo: AbstractStockRepository, portfolio_repo: AbstractPortfolioRepository):
         self.stock_repo = stock_repo
         self.portfolio_repo = portfolio_repo
+        self._stock_price_cache: Dict[str, float] = {}
 
     def create(self, stock: CreateStock) -> str:
         portfolio = self.portfolio_repo.get(stock.user_id)
@@ -40,7 +41,8 @@ class StockUsecase(AbstractStockUsecase):
         elif action_type == ActionType.BUY:
             portfolio.cash_balance -= price * quantity
 
-            holding = next((h for h in portfolio.holdings if h.symbol == symbol), None)  # Find the first holding
+            # Find the first holding
+            holding = next((h for h in portfolio.holdings if h.symbol == symbol), None)
             if not holding:
                 holding = Holding(symbol=symbol, shares=0, stock_type=stock.stock_type, total_cost=0.0)
                 portfolio.holdings.append(holding)
@@ -50,9 +52,10 @@ class StockUsecase(AbstractStockUsecase):
         else:
             portfolio.cash_balance += price * quantity
 
-            holding = next((h for h in portfolio.holdings if h.symbol == symbol), None)  # Find the first holding
+            # Find the first holding
+            holding = next((h for h in portfolio.holdings if h.symbol == symbol), None)
             if holding is None:
-                raise Exception("Can not sell non-exist stock")
+                raise Exception("Can not sell non-existent stock")
 
             holding.shares -= quantity
             if holding.shares > 0:
@@ -82,9 +85,8 @@ class StockUsecase(AbstractStockUsecase):
                 user_id=user_id,
                 total_portfolio_value=portfolio.cash_balance,
                 total_gain=portfolio.cash_balance - portfolio.total_money_in,
-                roi=round(
-                    ((portfolio.cash_balance - portfolio.total_money_in) / portfolio.total_money_in) * 100, 2
-                ),  # If no valid holdings, ROI depends only on cash balance
+                # If no valid holdings, ROI depends only on cash balance
+                roi=round((portfolio.cash_balance - portfolio.total_money_in) / portfolio.total_money_in, 4) * 100,
             )
 
         # Fetch prices in batch
@@ -96,7 +98,7 @@ class StockUsecase(AbstractStockUsecase):
 
         # Compute ROI
         total_value = total_stock_price + portfolio.cash_balance
-        roi = round(((total_value - portfolio.total_money_in) / portfolio.total_money_in) * 100, 2)
+        roi = round((total_value - portfolio.total_money_in) / portfolio.total_money_in, 4) * 100
 
         return PortfolioInfo(
             user_id=user_id,
@@ -139,7 +141,7 @@ class StockUsecase(AbstractStockUsecase):
                     quantity=shares,
                     price=stock_price,
                     avg_cost=round(total_cost / shares, 2),
-                    percentage=round(stock_total_value / total_value, 2) * 100,
+                    percentage=round(stock_total_value / total_value, 4) * 100,
                 )
             )
 
@@ -149,7 +151,7 @@ class StockUsecase(AbstractStockUsecase):
                 quantity=1,
                 price=portfolio.cash_balance,
                 avg_cost=0,
-                percentage=round(portfolio.cash_balance / total_value, 2) * 100,
+                percentage=round(portfolio.cash_balance / total_value, 4) * 100,
             )
         )
 
@@ -159,21 +161,31 @@ class StockUsecase(AbstractStockUsecase):
         if not stock_info:
             return {}
 
+        # Fetch only symbols not in cache
+        symbols = [symbol for symbol, _ in stock_info if symbol not in self._stock_price_cache]
+        if not symbols:
+            return self._stock_price_cache
+
         try:
-            symbols = [symbol for symbol, _ in stock_info]
             tickers = yf.Tickers(symbols)
-            stock_price_by_symbol = {}
+            new_prices = {}
 
             for symbol, stock_type in stock_info:
+                if symbol in self._stock_price_cache:
+                    new_prices[symbol] = self._stock_price_cache[symbol]
+                    continue
+
                 ticker = tickers.tickers.get(symbol.upper())
                 if ticker is None:
-                    stock_price_by_symbol[symbol] = 0.0
+                    new_prices[symbol] = 0.0
                     continue
 
                 price_field = STOCK_KEY if stock_type == StockType.STOCKS else ETF_KEY
-                stock_price_by_symbol[symbol] = ticker.info.get(price_field, 0.0)
+                new_prices[symbol] = ticker.info.get(price_field, 0.0)
 
-            return stock_price_by_symbol
+            # Update the cache with new prices
+            self._stock_price_cache.update(new_prices)
+            return self._stock_price_cache
         except Exception as e:
             print(f"Error fetching prices for symbols {[symbol for symbol, _ in stock_info]}: {e}")
             return {symbol: 0.0 for symbol, _ in stock_info}

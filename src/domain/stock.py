@@ -50,9 +50,9 @@ class CreateStock:
     def __post_init__(self):
         if not self.user_id or self.user_id <= 0:
             raise ValueError("user_id must be non-empty and greater than 0")
-        if not self.symbol or self.symbol.strip() == "":
+        if self.action_type != ActionType.TRANSFER and (not self.symbol or not self.symbol.strip()):
             raise ValueError("symbol must be a non-empty string")
-        if self.price <= 0:
+        if self.price < 0:
             raise ValueError("price must be greater than 0")
         if self.quantity <= 0:
             raise ValueError("quantity must be greater than 0")
@@ -79,7 +79,7 @@ class Stock:
             raise ValueError("id cannot be empty")
         if self.user_id <= 0:
             raise ValueError("user_id must be positive")
-        if not self.symbol:
+        if self.action_type != ActionType.TRANSFER and (not self.symbol or not self.symbol.strip()):
             raise ValueError("symbol cannot be empty")
         if self.price < 0:
             raise ValueError("price cannot be negative")
