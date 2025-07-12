@@ -155,6 +155,10 @@ class StockUsecase(AbstractStockUsecase):
             )
         )
 
+        # Sort ETF and STOCKS sections by percentage (descending order)
+        result[StockType.ETF.value].sort(key=lambda x: x.percentage, reverse=True)
+        result[StockType.STOCKS.value].sort(key=lambda x: x.percentage, reverse=True)
+
         return result
 
     def _get_stock_price(self, stock_info: List[Tuple[str, StockType]]) -> Dict[str, float]:

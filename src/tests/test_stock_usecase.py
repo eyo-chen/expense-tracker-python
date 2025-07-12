@@ -780,18 +780,18 @@ class TestStockUsecaseGetStockInfo:
             ],
             StockType.STOCKS.value: [
                 StockInfo(
-                    symbol="AAPL",
-                    quantity=10,
-                    price=200.0,
-                    avg_cost=150.00,  # 1500 / 10
-                    percentage=round(2000 / (1000 + 10 * 200 + 20 * 500 + 30 * 400 + 5 * 300), 4) * 100,
-                ),
-                StockInfo(
                     symbol="TSLA",
                     quantity=20,
                     price=500.0,
                     avg_cost=100.00,  # 2000 / 20
                     percentage=round(10000 / (1000 + 10 * 200 + 20 * 500 + 30 * 400 + 5 * 300), 4) * 100,
+                ),
+                StockInfo(
+                    symbol="AAPL",
+                    quantity=10,
+                    price=200.0,
+                    avg_cost=150.00,  # 1500 / 10
+                    percentage=round(2000 / (1000 + 10 * 200 + 20 * 500 + 30 * 400 + 5 * 300), 4) * 100,
                 ),
             ],
             "CASH": [
@@ -819,3 +819,49 @@ class TestStockUsecaseGetStockInfo:
             ]
         )
         assert result == expected_result
+
+    @patch.object(StockUsecase, "_get_stock_price")
+    def test_get_stock_info_sorting_by_percentage(self, mock_get_stock_price, stock_usecase):
+        # Arrange
+        usecase, _, portfolio_repo = stock_usecase
+        user_id = 1
+        portfolio = Portfolio(
+            user_id=user_id,
+            cash_balance=500.0,
+            total_money_in=1000.0,
+            holdings=[
+                Holding(symbol="AAPL", shares=1, stock_type=StockType.STOCKS, total_cost=100.0),  # Will have lowest %
+                Holding(symbol="MSFT", shares=1, stock_type=StockType.STOCKS, total_cost=200.0),  # Will have middle %
+                Holding(symbol="GOOGL", shares=1, stock_type=StockType.STOCKS, total_cost=300.0), # Will have highest %
+                Holding(symbol="SPY", shares=1, stock_type=StockType.ETF, total_cost=150.0),      # Will have lower ETF %
+                Holding(symbol="QQQ", shares=1, stock_type=StockType.ETF, total_cost=250.0),      # Will have higher ETF %
+            ],
+            created_at=ANY,
+            updated_at=ANY,
+        )
+        
+        # Set prices to create specific percentage order: GOOGL > MSFT > AAPL for stocks, QQQ > SPY for ETFs
+        mock_get_stock_price.return_value = {"AAPL": 50.0, "MSFT": 100.0, "GOOGL": 150.0, "SPY": 75.0, "QQQ": 125.0}
+        portfolio_repo.get.return_value = portfolio
+        
+        # Act
+        result = usecase.get_stock_info(user_id)
+        
+        # Assert - verify sorting by percentage (highest to lowest)
+        # Total value = 500 + 50 + 100 + 150 + 75 + 125 = 1000
+        # Expected percentages: GOOGL=15%, MSFT=10%, AAPL=5%, QQQ=12.5%, SPY=7.5%
+        
+        # ETF section should be sorted: QQQ (12.5%) > SPY (7.5%)
+        etf_section = result[StockType.ETF.value]
+        assert len(etf_section) == 2
+        assert etf_section[0].symbol == "QQQ"
+        assert etf_section[1].symbol == "SPY"
+        assert etf_section[0].percentage > etf_section[1].percentage
+        
+        # STOCKS section should be sorted: GOOGL (15%) > MSFT (10%) > AAPL (5%)
+        stocks_section = result[StockType.STOCKS.value]
+        assert len(stocks_section) == 3
+        assert stocks_section[0].symbol == "GOOGL"
+        assert stocks_section[1].symbol == "MSFT"
+        assert stocks_section[2].symbol == "AAPL"
+        assert stocks_section[0].percentage > stocks_section[1].percentage > stocks_section[2].percentage
