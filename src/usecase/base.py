@@ -3,6 +3,7 @@ from datetime import datetime
 from abc import ABC, abstractmethod
 from domain.stock import CreateStock, Stock, StockInfo
 from domain.portfolio import PortfolioInfo
+from domain.enum import DateOption
 
 
 class AbstractStockUsecase(ABC):
@@ -27,3 +28,7 @@ class AbstractHistoricalPortfolioUsecase(ABC):
     @abstractmethod
     def create(self, user_id: int, date: datetime):
         """Create historical porfolio"""
+
+    @abstractmethod
+    def get_portfolio_value(self, user_id: int, date_option: DateOption) -> Dict[str, List]:
+        """Get portfolio value over time based on date option"""

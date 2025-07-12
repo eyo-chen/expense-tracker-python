@@ -1,7 +1,8 @@
 from typing import List, Dict, Tuple
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from dateutil.relativedelta import relativedelta
 import yfinance as yf
-from domain.enum import StockType
+from domain.enum import StockType, DateOption
 from domain.historical_portfolio import HistoricalPortfolio, HistoricalHolding
 from .base import AbstractHistoricalPortfolioUsecase
 from adapters.base import AbstractHistoricalPortfolioRepository, AbstractPortfolioRepository
@@ -104,3 +105,66 @@ class HistoricalPortfolioUsecase(AbstractHistoricalPortfolioUsecase):
         except Exception as e:
             print(f"Error fetching prices for symbols {[symbol for symbol, _ in stock_info]}: {e}")
             return {symbol: 0.0 for symbol, _ in stock_info}
+
+    def get_portfolio_value(self, user_id: int, date_option: DateOption) -> Dict[str, List]:
+        end_date = datetime.now(timezone.utc)
+        start_date = _calculate_start_date(end_date, date_option)
+
+        historical_portfolios = self.historical_portfolio_repo.get_by_user_and_date_range(
+            user_id=user_id, start_date=start_date, end_date=end_date
+        )
+        if not historical_portfolios:
+            return {"date": [], "values": []}
+
+        # Group data based on date option requirements
+        if date_option in {DateOption.THREE_MONTHS, DateOption.SIX_MONTHS, DateOption.NINE_MONTHS, DateOption.ONE_YEAR}:
+            return _format_monthly_data(historical_portfolios)
+
+        return _format_yearly_data(historical_portfolios)
+
+
+def _calculate_start_date(end_date: datetime, date_option: DateOption) -> datetime:
+    if date_option == DateOption.THREE_MONTHS:
+        return (end_date - relativedelta(months=3)).replace(day=1)
+    elif date_option == DateOption.SIX_MONTHS:
+        return (end_date - relativedelta(months=6)).replace(day=1)
+    elif date_option == DateOption.NINE_MONTHS:
+        return (end_date - relativedelta(months=9)).replace(day=1)
+    elif date_option == DateOption.ONE_YEAR:
+        return (end_date - relativedelta(years=1)).replace(day=1)
+    elif date_option == DateOption.TWO_YEARS:
+        return (end_date - relativedelta(years=2)).replace(day=1)
+    elif date_option == DateOption.THREE_YEARS:
+        return (end_date - relativedelta(years=3)).replace(day=1)
+    else:  # ALL_TIME
+        return datetime(2020, 1, 1, tzinfo=timezone.utc)
+
+
+def _format_monthly_data(historical_portfolios: List[HistoricalPortfolio]) -> Dict[str, List]:
+    dates = []
+    values = []
+
+    for portfolio in historical_portfolios:
+        date_str = portfolio.date.strftime("%b %Y")
+        dates.append(date_str)
+        values.append(portfolio.portfolio_value)
+
+    return {"date": dates, "values": values}
+
+
+def _format_yearly_data(historical_portfolios: List[HistoricalPortfolio]) -> Dict[str, List]:
+    total_months = len(historical_portfolios)
+
+    if total_months <= 12:
+        # Use all data points if 12 or fewer
+        sampled_portfolios = historical_portfolios
+    else:
+        # Calculate interval to get ~12 points
+        interval = max(1, total_months // 12)
+        # Sample every Nth portfolio, limit to 12 points
+        sampled_portfolios = historical_portfolios[::interval][:12]
+
+    dates = [portfolio.date.strftime("%b %Y") for portfolio in sampled_portfolios]
+    values = [portfolio.portfolio_value for portfolio in sampled_portfolios]
+
+    return {"date": dates, "values": values}
