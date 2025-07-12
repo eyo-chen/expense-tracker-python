@@ -40,12 +40,23 @@ class HistoricalPortfolioServiceStub(object):
                 request_serializer=proto_dot_historical__portfolio__pb2.CreateReq.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.GetPortfolioValue = channel.unary_unary(
+                '/historical_portfolio.HistoricalPortfolioService/GetPortfolioValue',
+                request_serializer=proto_dot_historical__portfolio__pb2.GetPortfolioValueReq.SerializeToString,
+                response_deserializer=proto_dot_historical__portfolio__pb2.GetPortfolioValueRes.FromString,
+                _registered_method=True)
 
 
 class HistoricalPortfolioServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Create(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetPortfolioValue(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -58,6 +69,11 @@ def add_HistoricalPortfolioServiceServicer_to_server(servicer, server):
                     servicer.Create,
                     request_deserializer=proto_dot_historical__portfolio__pb2.CreateReq.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'GetPortfolioValue': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetPortfolioValue,
+                    request_deserializer=proto_dot_historical__portfolio__pb2.GetPortfolioValueReq.FromString,
+                    response_serializer=proto_dot_historical__portfolio__pb2.GetPortfolioValueRes.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -87,6 +103,33 @@ class HistoricalPortfolioService(object):
             '/historical_portfolio.HistoricalPortfolioService/Create',
             proto_dot_historical__portfolio__pb2.CreateReq.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetPortfolioValue(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/historical_portfolio.HistoricalPortfolioService/GetPortfolioValue',
+            proto_dot_historical__portfolio__pb2.GetPortfolioValueReq.SerializeToString,
+            proto_dot_historical__portfolio__pb2.GetPortfolioValueRes.FromString,
             options,
             channel_credentials,
             insecure,
