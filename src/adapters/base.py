@@ -1,8 +1,10 @@
 from typing import List
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from domain.stock import CreateStock, Stock
 from domain.portfolio import Portfolio
+from domain.historical_portfolio import HistoricalPortfolio
 
 
 class AbstractStockRepository(ABC):
@@ -29,3 +31,7 @@ class AbstractHistoricalPortfolioRepository(ABC):
     @abstractmethod
     def update(self, portfolio: Portfolio) -> None:
         """Update or insert historical portfolio in the repository"""
+
+    @abstractmethod
+    def get_by_user_and_date_range(self, user_id: int, start_date: datetime, end_date: datetime) -> List[HistoricalPortfolio]:
+        """Get historical portfolios for a user within a date range"""
