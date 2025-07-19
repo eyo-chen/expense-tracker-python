@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Callable
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 import yfinance as yf
@@ -118,9 +118,25 @@ class HistoricalPortfolioUsecase(AbstractHistoricalPortfolioUsecase):
 
         # Group data based on date option requirements
         if date_option in {DateOption.THREE_MONTHS, DateOption.SIX_MONTHS, DateOption.NINE_MONTHS, DateOption.ONE_YEAR}:
-            return _format_monthly_data(historical_portfolios)
+            return _format_monthly_data(historical_portfolios, lambda p: p.portfolio_value)
 
-        return _format_yearly_data(historical_portfolios)
+        return _format_yearly_data(historical_portfolios, lambda p: p.portfolio_value)
+
+    def get_gain(self, user_id: int, date_option: DateOption) -> Dict[str, List]:
+        end_date = datetime.now(timezone.utc)
+        start_date = _calculate_start_date(end_date, date_option)
+
+        historical_portfolios = self.historical_portfolio_repo.get_by_user_and_date_range(
+            user_id=user_id, start_date=start_date, end_date=end_date
+        )
+        if not historical_portfolios:
+            return {"date": [], "values": []}
+
+        # Group data based on date option requirements
+        if date_option in {DateOption.THREE_MONTHS, DateOption.SIX_MONTHS, DateOption.NINE_MONTHS, DateOption.ONE_YEAR}:
+            return _format_monthly_data(historical_portfolios, lambda p: p.gain)
+
+        return _format_yearly_data(historical_portfolios, lambda p: p.gain)
 
 
 def _calculate_start_date(end_date: datetime, date_option: DateOption) -> datetime:
@@ -140,19 +156,19 @@ def _calculate_start_date(end_date: datetime, date_option: DateOption) -> dateti
         return datetime(2020, 1, 1, tzinfo=timezone.utc)
 
 
-def _format_monthly_data(historical_portfolios: List[HistoricalPortfolio]) -> Dict[str, List]:
+def _format_monthly_data(historical_portfolios: List[HistoricalPortfolio], value_selector: Callable[[HistoricalPortfolio], float]) -> Dict[str, List]:
     dates = []
     values = []
 
     for portfolio in historical_portfolios:
         date_str = portfolio.date.strftime("%b %Y")
         dates.append(date_str)
-        values.append(portfolio.portfolio_value)
+        values.append(value_selector(portfolio))
 
     return {"date": dates, "values": values}
 
 
-def _format_yearly_data(historical_portfolios: List[HistoricalPortfolio]) -> Dict[str, List]:
+def _format_yearly_data(historical_portfolios: List[HistoricalPortfolio], value_selector: Callable[[HistoricalPortfolio], float]) -> Dict[str, List]:
     total_months = len(historical_portfolios)
 
     if total_months <= 12:
@@ -165,6 +181,8 @@ def _format_yearly_data(historical_portfolios: List[HistoricalPortfolio]) -> Dic
         sampled_portfolios = historical_portfolios[::interval][:12]
 
     dates = [portfolio.date.strftime("%b %Y") for portfolio in sampled_portfolios]
-    values = [portfolio.portfolio_value for portfolio in sampled_portfolios]
+    values = [value_selector(portfolio) for portfolio in sampled_portfolios]
 
     return {"date": dates, "values": values}
+
+

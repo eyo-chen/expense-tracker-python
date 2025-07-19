@@ -29,6 +29,17 @@ def get_portfolio_value_fixture():
     return usecase, historical_portfolio_repo
 
 
+@pytest.fixture
+def get_gain_fixture():
+    """Fixture for testing get_gain method"""
+    historical_portfolio_repo = Mock()
+    portfolio_repo = Mock()
+    usecase = HistoricalPortfolioUsecase(
+        historical_portfolio_repo=historical_portfolio_repo, portfolio_repo=portfolio_repo
+    )
+    return usecase, historical_portfolio_repo
+
+
 class TestHistoricalPortfolioCreate:
     @patch.object(HistoricalPortfolioUsecase, "_get_stock_price")
     def test_create_no_portfolio(self, mock_get_stock_price, create_usecase_fixture):
@@ -521,6 +532,278 @@ class TestGetPortfolioValue:
                 "Aug 2024",
             ],
             "values": [1100.0, 1200.0, 1300.0, 1400.0, 1500.0, 1600.0, 1700.0, 1800.0],
+        }
+
+        assert result == expected_result
+
+
+class TestGetGain:
+    def test_get_gain_no_historical_data(self, get_gain_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_gain_fixture
+        user_id = 1
+        date_option = DateOption.THREE_MONTHS
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = []
+
+        # Act
+        result = usecase.get_gain(user_id, date_option)
+
+        # Assert
+        assert result == {"date": [], "values": []}
+        historical_portfolio_repo.get_by_user_and_date_range.assert_called_once()
+
+    def test_get_gain_three_months(self, get_gain_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_gain_fixture
+        user_id = 1
+        date_option = DateOption.THREE_MONTHS
+
+        historical_portfolios = [
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                portfolio_value=1000.0,
+                cash_balance=100.0,
+                money_in=900.0,
+                holdings_value=900.0,
+                holdings_value_breakdown=[],
+                gain=100.0,
+                roi=11.11,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 2, 1, tzinfo=timezone.utc),
+                portfolio_value=1100.0,
+                cash_balance=100.0,
+                money_in=900.0,
+                holdings_value=1000.0,
+                holdings_value_breakdown=[],
+                gain=200.0,
+                roi=22.22,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 3, 1, tzinfo=timezone.utc),
+                portfolio_value=1200.0,
+                cash_balance=100.0,
+                money_in=900.0,
+                holdings_value=1100.0,
+                holdings_value_breakdown=[],
+                gain=300.0,
+                roi=33.33,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+        ]
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_gain(user_id, date_option)
+
+        # Assert
+        expected = {"date": ["Jan 2024", "Feb 2024", "Mar 2024"], "values": [100.0, 200.0, 300.0]}
+        assert result == expected
+
+    def test_get_gain_one_year(self, get_gain_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_gain_fixture
+        user_id = 1
+        date_option = DateOption.ONE_YEAR
+
+        # Create 12 months of data
+        historical_portfolios = []
+        for month in range(1, 13):
+            portfolio = HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, month, 1, tzinfo=timezone.utc),
+                portfolio_value=1000.0 + (month * 100),
+                cash_balance=100.0,
+                money_in=900.0,
+                holdings_value=900.0 + (month * 100),
+                holdings_value_breakdown=[],
+                gain=100.0 + (month * 100),
+                roi=11.11,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            )
+            historical_portfolios.append(portfolio)
+
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_gain(user_id, date_option)
+
+        # Assert
+        expected_result = {
+            "date": [
+                "Jan 2024",
+                "Feb 2024",
+                "Mar 2024",
+                "Apr 2024",
+                "May 2024",
+                "Jun 2024",
+                "Jul 2024",
+                "Aug 2024",
+                "Sep 2024",
+                "Oct 2024",
+                "Nov 2024",
+                "Dec 2024",
+            ],
+            "values": [
+                200.0,
+                300.0,
+                400.0,
+                500.0,
+                600.0,
+                700.0,
+                800.0,
+                900.0,
+                1000.0,
+                1100.0,
+                1200.0,
+                1300.0,
+            ],
+        }
+
+        assert result == expected_result
+
+    def test_get_gain_two_years_sampling(self, get_gain_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_gain_fixture
+        user_id = 1
+        date_option = DateOption.TWO_YEARS
+
+        # Create 24 months of data (should be sampled to 12 points)
+        historical_portfolios = []
+        for month in range(1, 25):
+            year = 2023 if month <= 12 else 2024
+            month_in_year = month if month <= 12 else month - 12
+            portfolio = HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(year, month_in_year, 1, tzinfo=timezone.utc),
+                portfolio_value=1000.0 + (month * 50),
+                cash_balance=100.0,
+                money_in=900.0,
+                holdings_value=900.0 + (month * 50),
+                holdings_value_breakdown=[],
+                gain=100.0 + (month * 50),
+                roi=11.11,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            )
+            historical_portfolios.append(portfolio)
+
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_gain(user_id, date_option)
+
+        # Assert
+        # Should sample every 2nd month (24 // 12 = 2) and limit to 12 points
+        expected_result = {
+            "date": [
+                "Jan 2023",
+                "Mar 2023",
+                "May 2023",
+                "Jul 2023",
+                "Sep 2023",
+                "Nov 2023",
+                "Jan 2024",
+                "Mar 2024",
+                "May 2024",
+                "Jul 2024",
+                "Sep 2024",
+                "Nov 2024",
+            ],
+            "values": [
+                150.0,
+                250.0,
+                350.0,
+                450.0,
+                550.0,
+                650.0,
+                750.0,
+                850.0,
+                950.0,
+                1050.0,
+                1150.0,
+                1250.0,
+            ],
+        }
+
+        assert result == expected_result
+
+    def test_get_gain_three_years_sampling(self, get_gain_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_gain_fixture
+        user_id = 1
+        date_option = DateOption.THREE_YEARS
+
+        # Create 36 months of data (should be sampled to 12 points)
+        historical_portfolios = []
+        for month in range(1, 37):
+            if month <= 12:
+                year, month_in_year = 2022, month
+            elif month <= 24:
+                year, month_in_year = 2023, month - 12
+            else:
+                year, month_in_year = 2024, month - 24
+
+            portfolio = HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(year, month_in_year, 1, tzinfo=timezone.utc),
+                portfolio_value=1000.0 + (month * 30),
+                cash_balance=100.0,
+                money_in=900.0,
+                holdings_value=900.0 + (month * 30),
+                holdings_value_breakdown=[],
+                gain=100.0 + (month * 30),
+                roi=11.11,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            )
+            historical_portfolios.append(portfolio)
+
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_gain(user_id, date_option)
+
+        # Assert
+        # Should sample every 3rd month (36 // 12 = 3) and limit to 12 points
+        expected_result = {
+            "date": [
+                "Jan 2022",
+                "Apr 2022",
+                "Jul 2022",
+                "Oct 2022",
+                "Jan 2023",
+                "Apr 2023",
+                "Jul 2023",
+                "Oct 2023",
+                "Jan 2024",
+                "Apr 2024",
+                "Jul 2024",
+                "Oct 2024",
+            ],
+            "values": [
+                130.0,
+                220.0,
+                310.0,
+                400.0,
+                490.0,
+                580.0,
+                670.0,
+                760.0,
+                850.0,
+                940.0,
+                1030.0,
+                1120.0,
+            ],
         }
 
         assert result == expected_result
