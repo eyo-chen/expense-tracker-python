@@ -26,7 +26,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n proto/historical_portfolio.proto\x12\x14historical_portfolio\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"U\n\tCreateReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12.\n\x04\x64\x61te\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x04\x64\x61te\"R\n\x14GetPortfolioValueReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12 \n\x0b\x64\x61te_option\x18\x02 \x01(\tR\x0b\x64\x61te_option\"B\n\x14GetPortfolioValueRes\x12\x12\n\x04\x64\x61te\x18\x01 \x03(\tR\x04\x64\x61te\x12\x16\n\x06values\x18\x02 \x03(\x01R\x06values2\xd0\x01\n\x1aHistoricalPortfolioService\x12\x43\n\x06\x43reate\x12\x1f.historical_portfolio.CreateReq\x1a\x16.google.protobuf.Empty\"\x00\x12m\n\x11GetPortfolioValue\x12*.historical_portfolio.GetPortfolioValueReq\x1a*.historical_portfolio.GetPortfolioValueRes\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n proto/historical_portfolio.proto\x12\x14historical_portfolio\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"U\n\tCreateReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12.\n\x04\x64\x61te\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x04\x64\x61te\"R\n\x14GetPortfolioValueReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12 \n\x0b\x64\x61te_option\x18\x02 \x01(\tR\x0b\x64\x61te_option\"B\n\x14GetPortfolioValueRes\x12\x12\n\x04\x64\x61te\x18\x01 \x03(\tR\x04\x64\x61te\x12\x16\n\x06values\x18\x02 \x03(\x01R\x06values\"H\n\nGetGainReq\x12\x18\n\x07user_id\x18\x01 \x01(\x05R\x07user_id\x12 \n\x0b\x64\x61te_option\x18\x02 \x01(\tR\x0b\x64\x61te_option\"8\n\nGetGainRes\x12\x12\n\x04\x64\x61te\x18\x01 \x03(\tR\x04\x64\x61te\x12\x16\n\x06values\x18\x02 \x03(\x01R\x06values2\xa1\x02\n\x1aHistoricalPortfolioService\x12\x43\n\x06\x43reate\x12\x1f.historical_portfolio.CreateReq\x1a\x16.google.protobuf.Empty\"\x00\x12m\n\x11GetPortfolioValue\x12*.historical_portfolio.GetPortfolioValueReq\x1a*.historical_portfolio.GetPortfolioValueRes\"\x00\x12O\n\x07GetGain\x12 .historical_portfolio.GetGainReq\x1a .historical_portfolio.GetGainRes\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -39,6 +39,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETPORTFOLIOVALUEREQ']._serialized_end=289
   _globals['_GETPORTFOLIOVALUERES']._serialized_start=291
   _globals['_GETPORTFOLIOVALUERES']._serialized_end=357
-  _globals['_HISTORICALPORTFOLIOSERVICE']._serialized_start=360
-  _globals['_HISTORICALPORTFOLIOSERVICE']._serialized_end=568
+  _globals['_GETGAINREQ']._serialized_start=359
+  _globals['_GETGAINREQ']._serialized_end=431
+  _globals['_GETGAINRES']._serialized_start=433
+  _globals['_GETGAINRES']._serialized_end=489
+  _globals['_HISTORICALPORTFOLIOSERVICE']._serialized_start=492
+  _globals['_HISTORICALPORTFOLIOSERVICE']._serialized_end=781
 # @@protoc_insertion_point(module_scope)

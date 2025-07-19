@@ -50,3 +50,28 @@ class HistoricalPortfolioService(historical_portfolio_pb2_grpc.HistoricalPortfol
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details("Internal server error")
             raise grpc.RpcError("Internal server error")
+
+    def GetGain(self, request, context):
+        try:
+            date_option = DateOption(request.date_option)
+            result = self.historical_portfolio_usecase.get_gain(
+                user_id=request.user_id, 
+                date_option=date_option
+            )
+            return historical_portfolio_pb2.GetGainRes(
+                date=result["date"],
+                values=result["values"]
+            )
+        except ValueError as e:
+            logging.error("Invalid date option: %s", str(e))
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details("Invalid date option")
+            raise grpc.RpcError("Invalid date option")
+        except Exception as e:
+            logging.error(
+                "Failed to get gain: %s",
+                str(e),
+            )
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal server error")
+            raise grpc.RpcError("Internal server error")
