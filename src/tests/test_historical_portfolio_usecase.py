@@ -40,6 +40,17 @@ def get_gain_fixture():
     return usecase, historical_portfolio_repo
 
 
+@pytest.fixture
+def get_stock_composition_fixture():
+    """Fixture for testing get_stock_composition method"""
+    historical_portfolio_repo = Mock()
+    portfolio_repo = Mock()
+    usecase = HistoricalPortfolioUsecase(
+        historical_portfolio_repo=historical_portfolio_repo, portfolio_repo=portfolio_repo
+    )
+    return usecase, historical_portfolio_repo
+
+
 class TestHistoricalPortfolioCreate:
     @patch.object(HistoricalPortfolioUsecase, "_get_stock_price")
     def test_create_no_portfolio(self, mock_get_stock_price, create_usecase_fixture):
@@ -807,3 +818,331 @@ class TestGetGain:
         }
 
         assert result == expected_result
+
+
+class TestGetStockComposition:
+    def test_get_stock_composition_no_historical_data(self, get_stock_composition_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_stock_composition_fixture
+        user_id = 1
+        date_option = DateOption.THREE_MONTHS
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = []
+
+        # Act
+        result = usecase.get_stock_composition(user_id, date_option)
+
+        # Assert
+        assert result == {"dates": [], "stocks": []}
+        historical_portfolio_repo.get_by_user_and_date_range.assert_called_once()
+
+    def test_get_stock_composition_three_months(self, get_stock_composition_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_stock_composition_fixture
+        user_id = 1
+        date_option = DateOption.THREE_MONTHS
+
+        historical_portfolios = [
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                portfolio_value=2000.0,
+                cash_balance=200.0,
+                money_in=1500.0,
+                holdings_value=1800.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=900.0),
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=900.0),
+                ],
+                gain=500.0,
+                roi=33.33,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 2, 1, tzinfo=timezone.utc),
+                portfolio_value=2200.0,
+                cash_balance=200.0,
+                money_in=1500.0,
+                holdings_value=2000.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1200.0),
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=800.0),
+                ],
+                gain=700.0,
+                roi=46.67,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 3, 1, tzinfo=timezone.utc),
+                portfolio_value=2400.0,
+                cash_balance=200.0,
+                money_in=1500.0,
+                holdings_value=2200.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1100.0),
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=1100.0),
+                ],
+                gain=900.0,
+                roi=60.0,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+        ]
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_stock_composition(user_id, date_option)
+
+        # Assert
+        assert result["dates"] == ["Jan 2024", "Feb 2024", "Mar 2024"]
+        assert len(result["stocks"]) == 2
+        
+        # Convert to dict for order-independent comparison
+        stocks_by_symbol = {stock["symbol"]: stock["percentages"] for stock in result["stocks"]}
+        assert stocks_by_symbol["AAPL"] == [50.0, 60.0, 50.0]
+        assert stocks_by_symbol["MSFT"] == [50.0, 40.0, 50.0]
+
+    def test_get_stock_composition_zero_holdings_value(self, get_stock_composition_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_stock_composition_fixture
+        user_id = 1
+        date_option = DateOption.THREE_MONTHS
+
+        historical_portfolios = [
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                portfolio_value=1000.0,
+                cash_balance=1000.0,
+                money_in=1000.0,
+                holdings_value=0.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=0, stock_type=StockType.STOCKS, total_value=0.0),
+                ],
+                gain=0.0,
+                roi=0.0,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+        ]
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_stock_composition(user_id, date_option)
+
+        # Assert
+        assert result["dates"] == ["Jan 2024"]
+        assert len(result["stocks"]) == 1
+        
+        # Convert to dict for order-independent comparison
+        stocks_by_symbol = {stock["symbol"]: stock["percentages"] for stock in result["stocks"]}
+        assert stocks_by_symbol["AAPL"] == [0.0]
+
+    def test_get_stock_composition_two_years_sampling(self, get_stock_composition_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_stock_composition_fixture
+        user_id = 1
+        date_option = DateOption.TWO_YEARS
+
+        # Create 24 months of data (should be sampled to 12 points)
+        historical_portfolios = []
+        for month in range(1, 25):
+            year = 2023 if month <= 12 else 2024
+            month_in_year = month if month <= 12 else month - 12
+            portfolio = HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(year, month_in_year, 1, tzinfo=timezone.utc),
+                portfolio_value=2000.0,
+                cash_balance=200.0,
+                money_in=1500.0,
+                holdings_value=1800.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1080.0),
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=720.0),
+                ],
+                gain=500.0,
+                roi=33.33,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            )
+            historical_portfolios.append(portfolio)
+
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_stock_composition(user_id, date_option)
+
+        # Assert
+        # Should sample every 2nd month (24 // 12 = 2) and limit to 12 points
+        expected_dates = [
+            "Jan 2023", "Mar 2023", "May 2023", "Jul 2023", "Sep 2023", "Nov 2023",
+            "Jan 2024", "Mar 2024", "May 2024", "Jul 2024", "Sep 2024", "Nov 2024",
+        ]
+        
+        assert result["dates"] == expected_dates
+        assert len(result["stocks"]) == 2
+        
+        # Convert to dict for order-independent comparison
+        stocks_by_symbol = {stock["symbol"]: stock["percentages"] for stock in result["stocks"]}
+        assert stocks_by_symbol["AAPL"] == [60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0]
+        assert stocks_by_symbol["MSFT"] == [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+
+    def test_get_stock_composition_single_stock(self, get_stock_composition_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_stock_composition_fixture
+        user_id = 1
+        date_option = DateOption.THREE_MONTHS
+
+        historical_portfolios = [
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                portfolio_value=1500.0,
+                cash_balance=500.0,
+                money_in=1000.0,
+                holdings_value=1000.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1000.0),
+                ],
+                gain=500.0,
+                roi=50.0,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+        ]
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_stock_composition(user_id, date_option)
+
+        # Assert
+        assert result["dates"] == ["Jan 2024"]
+        assert len(result["stocks"]) == 1
+        
+        # Convert to dict for order-independent comparison
+        stocks_by_symbol = {stock["symbol"]: stock["percentages"] for stock in result["stocks"]}
+        assert stocks_by_symbol["AAPL"] == [100.0]
+
+    def test_get_stock_composition_stock_sold_over_time(self, get_stock_composition_fixture):
+        # Arrange
+        usecase, historical_portfolio_repo = get_stock_composition_fixture
+        user_id = 1
+        date_option = DateOption.SIX_MONTHS
+
+        historical_portfolios = [
+            # January: Has both AAPL and MSFT
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                portfolio_value=2000.0,
+                cash_balance=200.0,
+                money_in=1500.0,
+                holdings_value=1800.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=900.0),
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=900.0),
+                ],
+                gain=500.0,
+                roi=33.33,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            # February: Still has both stocks
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 2, 1, tzinfo=timezone.utc),
+                portfolio_value=2200.0,
+                cash_balance=200.0,
+                money_in=1500.0,
+                holdings_value=2000.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1200.0),
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=800.0),
+                ],
+                gain=700.0,
+                roi=46.67,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            # March: Still has both stocks
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 3, 1, tzinfo=timezone.utc),
+                portfolio_value=2400.0,
+                cash_balance=200.0,
+                money_in=1500.0,
+                holdings_value=2200.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="AAPL", shares=10, stock_type=StockType.STOCKS, total_value=1100.0),
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=1100.0),
+                ],
+                gain=900.0,
+                roi=60.0,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            # April: Sold all AAPL, only MSFT remains
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 4, 1, tzinfo=timezone.utc),
+                portfolio_value=1700.0,
+                cash_balance=700.0,
+                money_in=1500.0,
+                holdings_value=1000.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=1000.0),
+                ],
+                gain=200.0,
+                roi=13.33,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            # May: Still only MSFT
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 5, 1, tzinfo=timezone.utc),
+                portfolio_value=1800.0,
+                cash_balance=700.0,
+                money_in=1500.0,
+                holdings_value=1100.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=1100.0),
+                ],
+                gain=300.0,
+                roi=20.0,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+            # June: Still only MSFT
+            HistoricalPortfolio(
+                user_id=user_id,
+                date=datetime(2024, 6, 1, tzinfo=timezone.utc),
+                portfolio_value=1900.0,
+                cash_balance=700.0,
+                money_in=1500.0,
+                holdings_value=1200.0,
+                holdings_value_breakdown=[
+                    HistoricalHolding(symbol="MSFT", shares=5, stock_type=StockType.STOCKS, total_value=1200.0),
+                ],
+                gain=400.0,
+                roi=26.67,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ),
+        ]
+        historical_portfolio_repo.get_by_user_and_date_range.return_value = historical_portfolios
+
+        # Act
+        result = usecase.get_stock_composition(user_id, date_option)
+
+        # Assert
+        assert result["dates"] == ["Jan 2024", "Feb 2024", "Mar 2024", "Apr 2024", "May 2024", "Jun 2024"]
+        assert len(result["stocks"]) == 2
+        
+        # Convert to dict for order-independent comparison
+        stocks_by_symbol = {stock["symbol"]: stock["percentages"] for stock in result["stocks"]}
+        assert stocks_by_symbol["AAPL"] == [50.0, 60.0, 50.0, 0.0, 0.0, 0.0]
+        assert stocks_by_symbol["MSFT"] == [50.0, 40.0, 50.0, 100.0, 100.0, 100.0]

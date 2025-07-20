@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 from datetime import datetime
 from abc import ABC, abstractmethod
 from domain.stock import CreateStock, Stock, StockInfo
@@ -36,3 +36,7 @@ class AbstractHistoricalPortfolioUsecase(ABC):
     @abstractmethod
     def get_gain(self, user_id: int, date_option: DateOption) -> Dict[str, List]:
         """Get gain/loss over time based on date option"""
+
+    @abstractmethod
+    def get_stock_composition(self, user_id: int, date_option: DateOption) -> Dict[str, Any]:
+        """Get stock composition percentages over time based on date option"""
