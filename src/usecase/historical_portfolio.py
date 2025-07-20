@@ -113,7 +113,7 @@ class HistoricalPortfolioUsecase(AbstractHistoricalPortfolioUsecase):
             user_id=user_id, start_date=start_date, end_date=end_date
         )
         if not historical_portfolios:
-            return {"dates": [], "values": []}
+            return {"dates": [], "stocks": []}
 
         # Group data based on date option requirements
         if date_option in {DateOption.THREE_MONTHS, DateOption.SIX_MONTHS, DateOption.NINE_MONTHS, DateOption.ONE_YEAR}:

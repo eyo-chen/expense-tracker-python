@@ -30,8 +30,24 @@ message GetGainRes {
   repeated double values = 2 [json_name = "values"];
 }
 
+message GetStockCompositionReq {
+  int32 user_id = 1 [json_name = "user_id"];
+  string date_option = 2 [json_name = "date_option"];
+}
+
+message StockComposition {
+  string symbol = 1 [json_name = "symbol"];
+  repeated double percentages = 2 [json_name = "percentages"];
+}
+
+message GetStockCompositionRes {
+  repeated string dates = 1 [json_name = "dates"];
+  repeated StockComposition stocks = 2 [json_name = "stocks"];
+}
+
 service HistoricalPortfolioService {
   rpc Create (CreateReq) returns (google.protobuf.Empty) {}
   rpc GetPortfolioValue (GetPortfolioValueReq) returns (GetPortfolioValueRes) {}
   rpc GetGain (GetGainReq) returns (GetGainRes) {}
+  rpc GetStockComposition (GetStockCompositionReq) returns (GetStockCompositionRes) {}
 }

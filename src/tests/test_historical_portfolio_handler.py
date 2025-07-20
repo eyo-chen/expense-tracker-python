@@ -188,3 +188,110 @@ class TestHistoricalPortfolioGetGain:
         mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
         mock_context.set_details.assert_called_once_with("Internal server error")
         mock_historical_portfolio_usecase.get_gain.assert_called_once()
+
+
+class TestHistoricalPortfolioGetStockComposition:
+    @pytest.fixture
+    def mock_historical_portfolio_usecase(self):
+        usecase = Mock(spec=AbstractHistoricalPortfolioUsecase)
+        return usecase
+
+    @pytest.fixture
+    def mock_context(self):
+        context = Mock()
+        context.set_code = Mock()
+        context.set_details = Mock()
+        return context
+
+    @pytest.fixture
+    def valid_request(self):
+        request = Mock()
+        request.user_id = 1
+        request.date_option = "3_months"
+        return request
+
+    def test_success(self, mock_historical_portfolio_usecase, mock_context, valid_request):
+        # Arrange
+        service = HistoricalPortfolioService(mock_historical_portfolio_usecase)
+        mock_historical_portfolio_usecase.get_stock_composition.return_value = {
+            "dates": ["Jan 2024", "Feb 2024", "Mar 2024"],
+            "stocks": [
+                {
+                    "symbol": "AAPL",
+                    "percentages": [50.0, 60.0, 50.0]
+                },
+                {
+                    "symbol": "MSFT",
+                    "percentages": [50.0, 40.0, 50.0]
+                }
+            ]
+        }
+
+        # Action
+        response = service.GetStockComposition(valid_request, mock_context)
+
+        # Assertion
+        mock_historical_portfolio_usecase.get_stock_composition.assert_called_once_with(
+            user_id=1, date_option=DateOption.THREE_MONTHS
+        )
+        assert response.dates == ["Jan 2024", "Feb 2024", "Mar 2024"]
+        assert len(response.stocks) == 2
+        
+        # Check first stock
+        assert response.stocks[0].symbol == "AAPL"
+        assert list(response.stocks[0].percentages) == [50.0, 60.0, 50.0]
+        
+        # Check second stock
+        assert response.stocks[1].symbol == "MSFT"
+        assert list(response.stocks[1].percentages) == [50.0, 40.0, 50.0]
+        
+        mock_context.set_code.assert_not_called()
+        mock_context.set_details.assert_not_called()
+
+    def test_empty_result(self, mock_historical_portfolio_usecase, mock_context, valid_request):
+        # Arrange
+        service = HistoricalPortfolioService(mock_historical_portfolio_usecase)
+        mock_historical_portfolio_usecase.get_stock_composition.return_value = {
+            "dates": [],
+            "stocks": []
+        }
+
+        # Action
+        response = service.GetStockComposition(valid_request, mock_context)
+
+        # Assertion
+        mock_historical_portfolio_usecase.get_stock_composition.assert_called_once_with(
+            user_id=1, date_option=DateOption.THREE_MONTHS
+        )
+        assert response.dates == []
+        assert len(response.stocks) == 0
+        mock_context.set_code.assert_not_called()
+        mock_context.set_details.assert_not_called()
+
+    def test_invalid_date_option(self, mock_historical_portfolio_usecase, mock_context):
+        # Arrange
+        service = HistoricalPortfolioService(mock_historical_portfolio_usecase)
+        request = Mock()
+        request.user_id = 1
+        request.date_option = "invalid_option"
+
+        # Act/Assertion
+        with pytest.raises(grpc.RpcError) as exc_info:
+            service.GetStockComposition(request, mock_context)
+        assert str(exc_info.value) == "Invalid date option"
+        mock_context.set_code.assert_called_once_with(grpc.StatusCode.INVALID_ARGUMENT)
+        mock_context.set_details.assert_called_once_with("Invalid date option")
+        mock_historical_portfolio_usecase.get_stock_composition.assert_not_called()
+
+    def test_internal_error(self, mock_historical_portfolio_usecase, mock_context, valid_request):
+        # Arrange
+        service = HistoricalPortfolioService(mock_historical_portfolio_usecase)
+        mock_historical_portfolio_usecase.get_stock_composition.side_effect = Exception("Server error")
+
+        # Act/Assertion
+        with pytest.raises(grpc.RpcError) as exc_info:
+            service.GetStockComposition(valid_request, mock_context)
+        assert str(exc_info.value) == "Internal server error"
+        mock_context.set_code.assert_called_once_with(grpc.StatusCode.INTERNAL)
+        mock_context.set_details.assert_called_once_with("Internal server error")
+        mock_historical_portfolio_usecase.get_stock_composition.assert_called_once()
